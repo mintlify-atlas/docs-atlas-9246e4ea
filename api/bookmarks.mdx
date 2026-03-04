@@ -1,0 +1,124 @@
+---
+title: Bookmarks
+description: Manage bookmarked channels for quick access
+---
+
+The Bookmarks API allows users to save channels for quick access. Bookmarks are per-user and help organize channels you frequently work with.
+
+## Endpoints
+
+### List Bookmarks
+
+<CodeGroup>
+```bash GET /api/bookmark
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/bookmark
+```
+</CodeGroup>
+
+Retrieve all channels bookmarked by the authenticated user.
+
+<ResponseExample>
+```json Response
+[
+  {
+    "id": "b1c2d3e4-f5a6-7890-bcde-f12345678901",
+    "channel": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "channel_name": "Mathematics K-12",
+    "modified": "2024-01-15T10:30:00Z"
+  }
+]
+```
+</ResponseExample>
+
+### Add Bookmark
+
+<CodeGroup>
+```bash POST /api/bookmark
+curl -X POST \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"channel": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"}' \
+  https://studio.learningequality.org/api/bookmark
+```
+</CodeGroup>
+
+Add a channel to your bookmarks.
+
+<ParamField body="channel" type="string" required>
+  Channel ID to bookmark
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "id": "b1c2d3e4-f5a6-7890-bcde-f12345678901",
+  "channel": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "modified": "2024-01-15T10:30:00Z"
+}
+```
+</ResponseExample>
+
+### Remove Bookmark
+
+<CodeGroup>
+```bash DELETE /api/bookmark/{id}
+curl -X DELETE \
+  -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/bookmark/b1c2d3e4-f5a6-7890-bcde-f12345678901
+```
+</CodeGroup>
+
+Remove a channel from your bookmarks.
+
+<ParamField path="id" type="string" required>
+  Bookmark ID to delete
+</ParamField>
+
+## Use Cases
+
+### Quick Access Dashboard
+
+Bookmarks allow users to create a personalized dashboard of frequently accessed channels:
+
+- Pin channels you're actively working on
+- Quick access to channels you review regularly
+- Organize channels across multiple projects
+
+### Filtering Channels
+
+You can filter channels by bookmark status using the channels API:
+
+```bash
+curl -H "Authorization: Token YOUR_TOKEN" \
+  "https://studio.learningequality.org/api/channel?bookmark=true"
+```
+
+## Bookmark Object
+
+<ResponseField name="id" type="string">
+  Unique identifier for the bookmark
+</ResponseField>
+
+<ResponseField name="channel" type="string">
+  ID of the bookmarked channel
+</ResponseField>
+
+<ResponseField name="channel_name" type="string">
+  Name of the bookmarked channel (read-only)
+</ResponseField>
+
+<ResponseField name="modified" type="string">
+  Timestamp when bookmark was last updated
+</ResponseField>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Channels API" icon="box" href="/api/channels">
+    Manage channel content and metadata
+  </Card>
+  <Card title="Channel Sets" icon="layer-group" href="/api/channel-sets">
+    Organize channels into collections
+  </Card>
+</CardGroup>

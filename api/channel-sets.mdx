@@ -1,0 +1,194 @@
+---
+title: Channel Sets
+description: Organize channels into collections for easier management
+---
+
+Channel Sets allow you to group related channels into collections. This is useful for organizing channels by theme, project, grade level, or other criteria.
+
+## Endpoints
+
+### List Channel Sets
+
+<CodeGroup>
+```bash GET /api/channelset
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channelset
+```
+</CodeGroup>
+
+Retrieve all channel sets accessible to the authenticated user.
+
+<ParamField query="public" type="boolean">
+  Filter by public visibility
+</ParamField>
+
+<ResponseExample>
+```json Response
+[
+  {
+    "id": "c1d2e3f4-a5b6-7890-cdef-123456789012",
+    "name": "Grade 6 Math Curriculum",
+    "description": "Complete math resources for 6th grade",
+    "channels": [
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+    ],
+    "count": 2,
+    "secret_token": "abc123def456",
+    "public": false,
+    "created": "2024-01-01T00:00:00Z",
+    "modified": "2024-01-15T10:30:00Z"
+  }
+]
+```
+</ResponseExample>
+
+### Create Channel Set
+
+<CodeGroup>
+```bash POST /api/channelset
+curl -X POST \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Science Resources",
+    "description": "Biology, Chemistry, and Physics channels",
+    "channels": ["channel-id-1", "channel-id-2"],
+    "public": false
+  }' \
+  https://studio.learningequality.org/api/channelset
+```
+</CodeGroup>
+
+Create a new channel set.
+
+<ParamField body="name" type="string" required>
+  Name of the channel set (max 200 characters)
+</ParamField>
+
+<ParamField body="description" type="string">
+  Description of the channel set
+</ParamField>
+
+<ParamField body="channels" type="array">
+  Array of channel IDs to include in the set
+</ParamField>
+
+<ParamField body="public" type="boolean">
+  Whether the channel set is publicly visible (default: false)
+</ParamField>
+
+### Get Channel Set
+
+<CodeGroup>
+```bash GET /api/channelset/{id}
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channelset/c1d2e3f4-a5b6-7890-cdef-123456789012
+```
+</CodeGroup>
+
+Retrieve details of a specific channel set.
+
+### Update Channel Set
+
+<CodeGroup>
+```bash PATCH /api/channelset/{id}
+curl -X PATCH \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Science Resources",
+    "channels": ["channel-id-1", "channel-id-2", "channel-id-3"]
+  }' \
+  https://studio.learningequality.org/api/channelset/c1d2e3f4-a5b6-7890-cdef-123456789012
+```
+</CodeGroup>
+
+Update an existing channel set.
+
+### Delete Channel Set
+
+<CodeGroup>
+```bash DELETE /api/channelset/{id}
+curl -X DELETE \
+  -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channelset/c1d2e3f4-a5b6-7890-cdef-123456789012
+```
+</CodeGroup>
+
+Delete a channel set. This does not delete the channels themselves, only the grouping.
+
+## Channel Set Object
+
+<ResponseField name="id" type="string">
+  Unique identifier for the channel set
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the channel set
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Description of the channel set
+</ResponseField>
+
+<ResponseField name="channels" type="array">
+  Array of channel IDs included in this set
+</ResponseField>
+
+<ResponseField name="count" type="integer">
+  Number of channels in the set
+</ResponseField>
+
+<ResponseField name="secret_token" type="string">
+  Unique token for sharing the channel set
+</ResponseField>
+
+<ResponseField name="public" type="boolean">
+  Whether the channel set is publicly visible
+</ResponseField>
+
+<ResponseField name="created" type="string">
+  Timestamp when the set was created
+</ResponseField>
+
+<ResponseField name="modified" type="string">
+  Timestamp when the set was last modified
+</ResponseField>
+
+## Use Cases
+
+### Curriculum Collections
+
+Group channels by:
+- Grade level ("Grade 6 Resources", "High School Science")
+- Subject area ("Mathematics", "Language Arts")
+- Educational standard ("Common Core Aligned", "NGSS Science")
+
+### Project Organization
+
+Organize channels for:
+- Specific initiatives or programs
+- Regional deployments
+- Partner organizations
+
+### Sharing Collections
+
+Share curated channel collections:
+- Generate a secret token for private sharing
+- Make collections public for discovery
+- Distribute related channels as a package
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Channels API" icon="box" href="/api/channels">
+    Manage individual channels
+  </Card>
+  <Card title="Bookmarks" icon="bookmark" href="/api/bookmarks">
+    Save channels for quick access
+  </Card>
+  <Card title="Catalog" icon="books" href="/api/catalog">
+    Browse public channel collections
+  </Card>
+</CardGroup>

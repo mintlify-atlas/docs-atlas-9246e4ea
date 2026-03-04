@@ -1,0 +1,235 @@
+---
+title: Catalog
+description: Browse and discover public channels in the Studio library
+---
+
+The Catalog API provides access to Studio's public channel library. Use it to discover educational content channels available for import or remixing.
+
+## Endpoints
+
+### Browse Catalog
+
+<CodeGroup>
+```bash GET /api/catalog
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/catalog
+```
+</CodeGroup>
+
+Retrieve a list of public channels from the Studio catalog.
+
+<ParamField query="page" type="integer">
+  Page number for pagination
+</ParamField>
+
+<ParamField query="page_size" type="integer">
+  Number of results per page (max 100)
+</ParamField>
+
+<ParamField query="keywords" type="string">
+  Search channels by keywords in name or description
+</ParamField>
+
+<ParamField query="languages" type="string">
+  Filter by language codes (comma-separated, e.g., "en,es,fr")
+</ParamField>
+
+<ParamField query="licenses" type="string">
+  Filter by license types (comma-separated)
+</ParamField>
+
+<ParamField query="kinds" type="string">
+  Filter by content types (video, document, exercise, etc.)
+</ParamField>
+
+<ParamField query="coach" type="boolean">
+  Filter channels with coach content
+</ParamField>
+
+<ParamField query="assessments" type="boolean">
+  Filter channels with assessment content
+</ParamField>
+
+<ParamField query="subtitles" type="boolean">
+  Filter channels with subtitled videos
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "count": 2451,
+  "next": "https://studio.learningequality.org/api/catalog?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Khan Academy Mathematics",
+      "description": "Comprehensive math resources from Khan Academy",
+      "language": "en",
+      "thumbnail_url": "https://storage.example.com/thumb.jpg",
+      "published": true,
+      "version": 12,
+      "count": 1523,
+      "public": true,
+      "last_published": "2024-01-10T14:20:00Z",
+      "author": "Khan Academy",
+      "tags": ["math", "k-12", "exercises"],
+      "primary_token": "abc123def456"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+### Search Catalog
+
+<CodeGroup>
+```bash GET /api/catalog?keywords=math
+curl -H "Authorization: Token YOUR_TOKEN" \
+  "https://studio.learningequality.org/api/catalog?keywords=math&languages=en"
+```
+</CodeGroup>
+
+Search for channels by keywords and filters.
+
+## Catalog Entry Object
+
+<ResponseField name="id" type="string">
+  Unique channel identifier
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Channel name
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Channel description
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Primary language code (ISO 639-1)
+</ResponseField>
+
+<ResponseField name="thumbnail_url" type="string">
+  URL to channel thumbnail image
+</ResponseField>
+
+<ResponseField name="published" type="boolean">
+  Whether the channel is published
+</ResponseField>
+
+<ResponseField name="version" type="integer">
+  Current version number
+</ResponseField>
+
+<ResponseField name="count" type="integer">
+  Total number of resources in the channel
+</ResponseField>
+
+<ResponseField name="public" type="boolean">
+  Whether the channel is publicly listed
+</ResponseField>
+
+<ResponseField name="last_published" type="string">
+  Timestamp of last publication
+</ResponseField>
+
+<ResponseField name="author" type="string">
+  Channel author or organization
+</ResponseField>
+
+<ResponseField name="tags" type="array">
+  Array of tag strings
+</ResponseField>
+
+<ResponseField name="primary_token" type="string">
+  Token for importing the channel into Kolibri
+</ResponseField>
+
+## Use Cases
+
+### Content Discovery
+
+Browse the catalog to find:
+- Educational content in specific subjects
+- Resources in particular languages
+- Openly licensed materials for remixing
+- Channels aligned to educational standards
+
+### Channel Recommendations
+
+Build recommendation systems by:
+- Analyzing channel metadata and tags
+- Filtering by content types and licenses
+- Matching user interests to catalog entries
+
+### Integration
+
+Integrate the catalog into:
+- Custom discovery interfaces
+- Content management systems
+- Educational platforms
+- Institutional repositories
+
+## Example: Building a Search Interface
+
+```javascript
+// Search for math channels in English with exercises
+const searchCatalog = async (query) => {
+  const params = new URLSearchParams({
+    keywords: query,
+    languages: 'en',
+    kinds: 'exercise',
+    page_size: 20
+  });
+  
+  const response = await fetch(
+    `https://studio.learningequality.org/api/catalog?${params}`,
+    {
+      headers: {
+        'Authorization': `Token ${YOUR_TOKEN}`
+      }
+    }
+  );
+  
+  return await response.json();
+};
+
+// Usage
+const results = await searchCatalog('algebra');
+console.log(`Found ${results.count} channels`);
+```
+
+## Filtering Options
+
+### By Content Type
+
+Available content kinds:
+- `video` - Video resources
+- `document` - PDFs and ePubs
+- `exercise` - Interactive exercises
+- `audio` - Audio files
+- `html5` - HTML5 apps
+- `topic` - Topic containers
+
+### By License
+
+Common license filters:
+- `CC BY` - Creative Commons Attribution
+- `CC BY-SA` - Attribution-ShareAlike
+- `CC BY-NC` - Attribution-NonCommercial
+- `Public Domain` - No restrictions
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Public Channels" icon="globe" href="/api/public-channels">
+    Access channels for Kolibri import
+  </Card>
+  <Card title="Channels API" icon="box" href="/api/channels">
+    Create and manage your own channels
+  </Card>
+  <Card title="Content Nodes" icon="sitemap" href="/api/content-nodes">
+    Browse and copy content from catalog channels
+  </Card>
+</CardGroup>
