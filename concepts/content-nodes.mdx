@@ -1,0 +1,324 @@
+---
+title: 'Content nodes'
+description: 'Understanding the MPTT tree structure that organizes content within channels'
+icon: 'sitemap'
+---
+
+Content nodes are the building blocks of channel content in Kolibri Studio. They form a hierarchical tree structure using Modified Preorder Tree Traversal (MPTT) to efficiently organize topics and resources.
+
+## What is a content node?
+
+A content node represents a single item in your channel's content hierarchy. It can be:
+
+- A **topic** - A folder containing other nodes
+- A **resource** - Educational content like videos, documents, or exercises
+
+All nodes are stored in the `ContentNode` model (`models.py:1810`) which extends Django MPTT's `MPTTModel`.
+
+## MPTT tree structure
+
+Kolibri Studio uses Modified Preorder Tree Traversal (MPTT) to organize content hierarchically. MPTT stores tree information in these fields:
+
+```python
+class ContentNode(MPTTModel, models.Model):
+    parent = TreeForeignKey("self", null=True, related_name="children", ...)
+    # MPTT adds these fields automatically:
+    # tree_id - Identifies which tree this node belongs to
+    # lft - Left boundary in tree traversal
+    # rght - Right boundary in tree traversal  
+    # level - Depth in the tree (0 = root)
+```
+
+<Info>
+MPTT allows efficient tree queries:
+- Get all descendants with a single query
+- Determine parent-child relationships without recursion
+- Move subtrees efficiently
+</Info>
+
+### Tree traversal example
+
+Consider this content structure:
+
+```
+Math (tree_id=1, lft=1, rght=10, level=0)
+├── Algebra (tree_id=1, lft=2, rght=5, level=1)
+│   ├── Linear Equations (tree_id=1, lft=3, rght=4, level=2)
+└── Geometry (tree_id=1, lft=6, rght=9, level=1)
+    ├── Triangles (tree_id=1, lft=7, rght=8, level=2)
+```
+
+To get all descendants of "Math", query: `lft > 1 AND rght < 10 AND tree_id = 1`
+
+## Content node fields
+
+### Identity fields
+
+```python
+id = UUIDField(primary_key=True, default=uuid.uuid4)
+node_id = UUIDField(default=uuid.uuid4, editable=False)
+content_id = UUIDField(default=uuid.uuid4, editable=False)
+```
+
+- **id** - Internal Studio ID (changes when copied)
+- **node_id** - Kolibri node ID (used for tracking in Kolibri)
+- **content_id** - Identifies content across copies (for learner progress tracking)
+
+### Metadata fields
+
+```python
+title = models.CharField(max_length=200, blank=True)
+description = models.TextField(blank=True)
+kind = models.ForeignKey("ContentKind", related_name="contentnodes", ...)
+language = models.ForeignKey("Language", null=True, ...)
+license = models.ForeignKey("License", null=True, ...)
+license_description = models.CharField(max_length=400, ...)
+author = models.CharField(max_length=200, blank=True, ...)
+aggregator = models.CharField(max_length=200, blank=True, ...)
+provider = models.CharField(max_length=200, blank=True, ...)
+copyright_holder = models.CharField(max_length=200, ...)
+```
+
+### Source tracking
+
+These fields track content provenance when copying:
+
+```python
+original_channel_id = UUIDField(editable=False, null=True)
+original_source_node_id = UUIDField(editable=False, null=True)
+source_channel_id = UUIDField(editable=False, null=True)
+source_node_id = UUIDField(editable=False, null=True)
+source_id = models.CharField(max_length=200, blank=True)  # Ricecooker
+source_domain = models.CharField(max_length=300, blank=True)
+```
+
+<Info>
+- **original_channel_id** - The very first channel this content came from
+- **source_channel_id** - The immediate channel this was copied from
+- **original_source_node_id** - Original node_id
+- **source_node_id** - Immediate source node_id
+</Info>
+
+### State tracking
+
+```python
+created = models.DateTimeField(default=timezone.now)
+modified = models.DateTimeField(auto_now=True)
+published = models.BooleanField(default=False)
+publishing = models.BooleanField(default=False)
+complete = models.BooleanField(null=True)
+changed = models.BooleanField(default=True)
+```
+
+### Metadata labels
+
+These JSONField properties store applied labels:
+
+```python
+grade_levels = models.JSONField(blank=True, null=True)
+resource_types = models.JSONField(blank=True, null=True)
+learning_activities = models.JSONField(blank=True, null=True)
+accessibility_labels = models.JSONField(blank=True, null=True)
+categories = models.JSONField(blank=True, null=True)
+learner_needs = models.JSONField(blank=True, null=True)
+```
+
+Stored as a map:
+```json
+{
+  "<label_id1>": true,
+  "<label_id2>": true
+}
+```
+
+### Role visibility
+
+```python
+role_visibility = models.CharField(
+    max_length=50, 
+    choices=roles.choices, 
+    default=roles.LEARNER
+)
+```
+
+Determines who can see the content in Kolibri:
+- `LEARNER` - All users
+- `COACH` - Only coaches and admins
+
+### Exercise-specific fields
+
+For exercise content types, additional data is stored in `extra_fields`:
+
+```python
+extra_fields = JSONField(default=dict, blank=True, null=True)
+# Contains:
+# - type: mastery model (e.g., "num_correct_in_a_row_5")
+# - m: m value for M out of N mastery
+# - n: n value for M out of N mastery
+```
+
+## Tree operations
+
+### Getting tree data
+
+The `get_tree_data()` method (`models.py:2106`) returns a nested structure:
+
+```python
+def get_tree_data(self, levels=float("inf")):
+    if self.kind_id == content_kinds.TOPIC:
+        node_data = {
+            "title": self.title,
+            "kind": self.kind_id,
+            "node_id": self.node_id,
+            "studio_id": self.id,
+        }
+        children = self.children.all()
+        if levels > 0:
+            node_data["children"] = [
+                c.get_tree_data(levels=levels - 1) for c in children
+            ]
+        return node_data
+```
+
+### Moving nodes
+
+MPTT handles tree restructuring automatically when you change the `parent` field:
+
+```python
+node.parent = new_parent_node
+node.save()  # MPTT updates lft, rght, level automatically
+```
+
+<Warning>
+When moving nodes to a different tree (different `tree_id`), the cache must be invalidated:
+```python
+cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=self.id), self.tree_id, None)
+```
+</Warning>
+
+## Node types and hierarchy
+
+### Topics
+
+Topics are container nodes that organize other content:
+
+```python
+kind_id = content_kinds.TOPIC
+```
+
+- Can contain child nodes
+- Form the structure of your channel
+- Cannot have files attached
+
+### Resources
+
+Resource nodes contain actual educational content:
+
+```python
+kind_id in [content_kinds.VIDEO, content_kinds.DOCUMENT, 
+            content_kinds.EXERCISE, content_kinds.AUDIO, ...]
+```
+
+- Can have files attached via the `File` model
+- Cannot have children (leaf nodes)
+- Counted in channel resource statistics
+
+## Relationships
+
+### Prerequisites
+
+```python
+prerequisite = models.ManyToManyField(
+    "self",
+    related_name="is_prerequisite_of",
+    through="PrerequisiteContentRelationship",
+    symmetrical=False,
+)
+```
+
+Marks content that should be completed before this node.
+
+### Related content
+
+```python
+is_related = models.ManyToManyField(
+    "self",
+    related_name="relate_to",
+    through="RelatedContentRelationship",
+    symmetrical=False,
+)
+```
+
+Links to supplementary or related resources.
+
+### Tags
+
+```python
+tags = models.ManyToManyField(
+    ContentTag, 
+    symmetrical=False, 
+    related_name="tagged_content"
+)
+```
+
+Channel-specific tags for categorization.
+
+## Permissions and filtering
+
+Content nodes inherit permissions from their channel (`models.py:2037`):
+
+```python
+@classmethod
+def filter_edit_queryset(cls, queryset, user):
+    edit_cte = PermissionCTE.editable_channels(user_id)
+    queryset = queryset.with_cte(edit_cte).annotate(
+        edit=edit_cte.exists(cls._permission_filter),
+    )
+    return queryset.filter(edit=True)
+```
+
+The permission check uses the `tree_id` to determine which channel a node belongs to.
+
+## Tree ID management
+
+Each channel's content trees have unique `tree_id` values. The `MPTTTreeIDManager` model (`models.py:743`) ensures concurrent tree creation doesn't conflict:
+
+```python
+class MPTTTreeIDManager(models.Model):
+    # Uses database auto-increment for thread-safe tree_id generation
+```
+
+## Working with descendants
+
+MPTT provides efficient descendant queries:
+
+```python
+# Get all descendants
+descendants = node.get_descendants()
+
+# Get all descendants including self
+all_nodes = node.get_descendants(include_self=True)
+
+# Get only children (immediate descendants)
+children = node.get_children()
+
+# Get ancestors
+ancestors = node.get_ancestors()
+```
+
+## Related models
+
+- [Channels](/concepts/channels) - The container for content node trees
+- [Content types](/concepts/content-types) - Different kinds of content nodes
+- [Licensing](/concepts/licensing) - License requirements for content
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Content types" icon="shapes" href="/concepts/content-types">
+    Learn about the different types of content nodes
+  </Card>
+  <Card title="Organizing content" icon="folder-tree" href="/guide/organizing-content">
+    Best practices for structuring your channel
+  </Card>
+</CardGroup>

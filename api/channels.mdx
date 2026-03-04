@@ -1,0 +1,426 @@
+---
+title: "Channels"
+description: "Manage educational content channels in Kolibri Studio"
+---
+
+The Channels API allows you to create, update, and manage educational content channels. Channels are the top-level containers for organizing educational content.
+
+## Endpoints
+
+### List Channels
+
+<CodeGroup>
+```bash GET /api/channel
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channel
+```
+</CodeGroup>
+
+Retrieve a list of channels accessible to the authenticated user.
+
+<ParamField query="page_size" type="integer">
+  Number of results per page (max 1000)
+</ParamField>
+
+<ParamField query="bookmark" type="boolean">
+  Filter by bookmarked channels
+</ParamField>
+
+<ParamField query="edit" type="boolean">
+  Filter channels where user has edit permissions
+</ParamField>
+
+<ParamField query="view" type="boolean">
+  Filter channels where user has view permissions
+</ParamField>
+
+<ParamField query="published" type="boolean">
+  Filter by published status
+</ParamField>
+
+<ParamField query="public" type="boolean">
+  Filter by public visibility
+</ParamField>
+
+<ParamField query="languages" type="string">
+  Filter by language codes (comma-separated)
+</ParamField>
+
+<ParamField query="keywords" type="string">
+  Search channels by keywords
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "results": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Mathematics K-12",
+      "description": "Complete mathematics curriculum",
+      "language": "en",
+      "thumbnail_url": "https://storage.example.com/thumb.jpg",
+      "published": true,
+      "version": 5,
+      "count": 342,
+      "modified": "2024-01-15T10:30:00Z",
+      "created": "2023-06-01T08:00:00Z",
+      "last_published": "2024-01-10T14:20:00Z",
+      "root_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "edit": true,
+      "view": true
+    }
+  ],
+  "count": 1
+}
+```
+</ResponseExample>
+
+### Create Channel
+
+<CodeGroup>
+```bash POST /api/channel
+curl -X POST \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "New Channel",
+    "description": "Channel description",
+    "language": "en"
+  }' \
+  https://studio.learningequality.org/api/channel
+```
+</CodeGroup>
+
+Create a new content channel.
+
+<ParamField body="name" type="string" required>
+  Channel name (max 200 characters)
+</ParamField>
+
+<ParamField body="description" type="string">
+  Channel description (max 400 characters)
+</ParamField>
+
+<ParamField body="language" type="string">
+  Primary language code (e.g., "en", "es", "fr")
+</ParamField>
+
+<ParamField body="thumbnail" type="string">
+  Thumbnail file path
+</ParamField>
+
+<ParamField body="thumbnail_encoding" type="object">
+  Thumbnail encoding options
+  <Expandable title="properties">
+    <ResponseField name="base64" type="string">
+      Base64 encoded thumbnail data
+    </ResponseField>
+    <ResponseField name="orientation" type="integer">
+      Image orientation
+    </ResponseField>
+    <ResponseField name="scale" type="number">
+      Image scale factor
+    </ResponseField>
+    <ResponseField name="startX" type="number">
+      Crop start X position
+    </ResponseField>
+    <ResponseField name="startY" type="number">
+      Crop start Y position
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="content_defaults" type="object">
+  Default content settings for resources in this channel
+  <Expandable title="properties">
+    <ResponseField name="author" type="string">
+      Default author name
+    </ResponseField>
+    <ResponseField name="provider" type="string">
+      Default content provider
+    </ResponseField>
+    <ResponseField name="aggregator" type="string">
+      Default content aggregator
+    </ResponseField>
+    <ResponseField name="license" type="integer">
+      Default license ID
+    </ResponseField>
+    <ResponseField name="copyright_holder" type="string">
+      Default copyright holder
+    </ResponseField>
+    <ResponseField name="language" type="string">
+      Default language code
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "New Channel",
+  "description": "Channel description",
+  "language": "en",
+  "version": 0,
+  "published": false,
+  "root_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "edit": true,
+  "view": true
+}
+```
+</ResponseExample>
+
+### Update Channel
+
+<CodeGroup>
+```bash PATCH /api/channel/{id}
+curl -X PATCH \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Channel Name",
+    "description": "Updated description"
+  }' \
+  https://studio.learningequality.org/api/channel/{id}
+```
+</CodeGroup>
+
+Update an existing channel. Only fields included in the request will be updated.
+
+<ParamField path="id" type="string" required>
+  Channel UUID
+</ParamField>
+
+<ParamField body="name" type="string">
+  Channel name
+</ParamField>
+
+<ParamField body="description" type="string">
+  Channel description
+</ParamField>
+
+<ParamField body="language" type="string">
+  Primary language code
+</ParamField>
+
+<ParamField body="thumbnail" type="string">
+  Thumbnail file path
+</ParamField>
+
+<ParamField body="thumbnail_encoding" type="object">
+  Thumbnail encoding options
+</ParamField>
+
+<ParamField body="content_defaults" type="object">
+  Default content settings
+</ParamField>
+
+### Delete Channel
+
+<CodeGroup>
+```bash DELETE /api/channel/{id}
+curl -X DELETE \
+  -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channel/{id}
+```
+</CodeGroup>
+
+Soft delete a channel. The channel is marked as deleted but not permanently removed.
+
+<ParamField path="id" type="string" required>
+  Channel UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "status": "success"
+}
+```
+</ResponseExample>
+
+### Get Channel Languages
+
+<CodeGroup>
+```bash GET /api/channel/{id}/languages
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channel/{id}/languages
+```
+</CodeGroup>
+
+Get all languages present in a channel's resources.
+
+<ParamField path="id" type="string" required>
+  Channel UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "languages": ["en", "es", "fr"]
+}
+```
+</ResponseExample>
+
+### Check Channel Language
+
+<CodeGroup>
+```bash GET /api/channel/{id}/language_exists
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channel/{id}/language_exists
+```
+</CodeGroup>
+
+Verify that the language set for a channel is present in at least one of its resources.
+
+<ParamField path="id" type="string" required>
+  Channel UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "exists": true
+}
+```
+</ResponseExample>
+
+### Get Version Details
+
+<CodeGroup>
+```bash GET /api/channel/{id}/version_detail
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/channel/{id}/version_detail
+```
+</CodeGroup>
+
+Get detailed version information for a channel.
+
+<ParamField path="id" type="string" required>
+  Channel UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "id": "version-id-123",
+  "version": 5,
+  "resource_count": 342,
+  "kind_count": {
+    "video": 120,
+    "document": 85,
+    "exercise": 137
+  },
+  "size": 5242880000,
+  "date_published": "2024-01-10T14:20:00Z",
+  "version_notes": "Added new math exercises",
+  "included_languages": ["en", "es"],
+  "included_licenses": [1, 2, 8],
+  "included_categories": ["mathematics", "algebra"],
+  "non_distributable_licenses_included": false
+}
+```
+</ResponseExample>
+
+## Channel Model Fields
+
+<ResponseField name="id" type="string">
+  Unique channel identifier (UUID)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Channel name (max 200 characters)
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Channel description (max 400 characters)
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Primary language code
+</ResponseField>
+
+<ResponseField name="thumbnail" type="string">
+  Thumbnail file path
+</ResponseField>
+
+<ResponseField name="thumbnail_encoding" type="object">
+  Thumbnail encoding data
+</ResponseField>
+
+<ResponseField name="thumbnail_url" type="string">
+  Full URL to thumbnail image
+</ResponseField>
+
+<ResponseField name="version" type="integer">
+  Current version number (read-only)
+</ResponseField>
+
+<ResponseField name="published" type="boolean">
+  Whether the channel has been published
+</ResponseField>
+
+<ResponseField name="publishing" type="boolean">
+  Whether the channel is currently being published
+</ResponseField>
+
+<ResponseField name="public" type="boolean">
+  Whether the channel is publicly accessible
+</ResponseField>
+
+<ResponseField name="count" type="integer">
+  Number of non-topic resources in the channel
+</ResponseField>
+
+<ResponseField name="created" type="string">
+  Channel creation timestamp (ISO 8601)
+</ResponseField>
+
+<ResponseField name="modified" type="string">
+  Last modification timestamp (ISO 8601)
+</ResponseField>
+
+<ResponseField name="last_published" type="string">
+  Last publication timestamp (ISO 8601)
+</ResponseField>
+
+<ResponseField name="root_id" type="string">
+  ID of the channel's root content node
+</ResponseField>
+
+<ResponseField name="trash_root_id" type="string">
+  ID of the channel's trash tree root node
+</ResponseField>
+
+<ResponseField name="staging_root_id" type="string">
+  ID of the channel's staging tree root node
+</ResponseField>
+
+<ResponseField name="primary_token" type="string">
+  Primary channel access token
+</ResponseField>
+
+<ResponseField name="content_defaults" type="object">
+  Default settings for content in this channel
+</ResponseField>
+
+<ResponseField name="edit" type="boolean">
+  Whether the current user has edit permissions
+</ResponseField>
+
+<ResponseField name="view" type="boolean">
+  Whether the current user has view permissions
+</ResponseField>
+
+<ResponseField name="unpublished_changes" type="boolean">
+  Whether there are unpublished changes
+</ResponseField>
+
+<ResponseField name="source_url" type="string">
+  Original source URL for the channel content
+</ResponseField>
+
+<ResponseField name="demo_server_url" type="string">
+  URL to demo server showcasing the channel
+</ResponseField>

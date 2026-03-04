@@ -1,0 +1,597 @@
+---
+title: Backend Development
+description: Build Django models, viewsets, and REST APIs for Kolibri Studio
+---
+
+Kolibri Studio's backend is built with **Django 1.11** and **Django REST Framework**, using PostgreSQL for data storage.
+
+## Backend Stack
+
+<CardGroup cols={2}>
+  <Card title="Django 1.11" icon="python">
+    Web framework for the backend
+  </Card>
+  <Card title="Django REST Framework" icon="api">
+    RESTful API toolkit
+  </Card>
+  <Card title="PostgreSQL 12" icon="database">
+    Relational database
+  </Card>
+  <Card title="Celery" icon="tasks">
+    Distributed task queue
+  </Card>
+</CardGroup>
+
+## Project Structure
+
+Backend code lives in `contentcuration/contentcuration/`:
+
+```
+contentcuration/contentcuration/
+├── models.py                # Django models
+├── viewsets/                # DRF viewsets
+│   ├── base.py              # Base classes
+│   ├── channel.py           # Channel viewsets
+│   ├── contentnode.py       # Content node viewsets
+│   ├── assessmentitem.py    # Assessment viewsets
+│   ├── file.py              # File viewsets
+│   └── sync/                # Sync endpoint
+│       ├── endpoint.py      # Main sync endpoint
+│       ├── constants.py     # Change type constants
+│       └── utils.py         # Sync utilities
+├── tests/                   # Python tests
+├── management/              # Django management commands
+└── db/                      # Custom DB utilities
+    └── models/
+        ├── manager.py       # Custom managers
+        └── query.py         # Custom query classes
+```
+
+## Django Models
+
+### Core Models
+
+Studio's main models are defined in `models.py`:
+
+```python
+from django.db import models
+from mptt.models import MPTTModel, TreeForeignKey
+
+class Channel(models.Model):
+    """Represents a content channel."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    thumbnail = models.TextField(blank=True)
+    public = models.BooleanField(default=False)
+    published_data = models.JSONField(default=dict)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'contentcuration_channel'
+
+class ContentNode(MPTTModel):
+    """Represents a node in the content tree."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    kind_id = models.CharField(max_length=200, choices=content_kinds.choices)
+    parent = TreeForeignKey('self', null=True, blank=True,
+                           related_name='children',
+                           on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, related_name='nodes',
+                                on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'contentcuration_contentnode'
+```
+
+### Model Relationships
+
+<Tabs>
+  <Tab title="One-to-Many">
+    ```python
+    class Channel(models.Model):
+        # ...
+
+    class ContentNode(models.Model):
+        channel = models.ForeignKey(
+            Channel,
+            related_name='nodes',
+            on_delete=models.CASCADE
+        )
+
+    # Usage
+    channel = Channel.objects.get(id=channel_id)
+    nodes = channel.nodes.all()  # Access via related_name
+    ```
+  </Tab>
+
+  <Tab title="Many-to-Many">
+    ```python
+    class User(AbstractBaseUser):
+        # ...
+
+    class Channel(models.Model):
+        editors = models.ManyToManyField(
+            User,
+            related_name='editable_channels',
+            through='ChannelUser'
+        )
+
+    class ChannelUser(models.Model):
+        """Through model for user-channel relationship."""
+        user = models.ForeignKey(User, on_delete=models.CASCADE)
+        channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+        can_edit = models.BooleanField(default=False)
+        can_view = models.BooleanField(default=False)
+    ```
+  </Tab>
+
+  <Tab title="Tree Structure (MPTT)">
+    ```python
+    from mptt.models import MPTTModel, TreeForeignKey
+
+    class ContentNode(MPTTModel):
+        parent = TreeForeignKey(
+            'self',
+            null=True,
+            blank=True,
+            related_name='children',
+            on_delete=models.CASCADE
+        )
+
+    # MPTT adds these fields automatically:
+    # - tree_id: Tree identifier
+    # - lft, rght: Nested set fields
+    # - level: Depth in tree
+
+    # Usage
+    node = ContentNode.objects.get(id=node_id)
+    ancestors = node.get_ancestors()  # All parent nodes
+    descendants = node.get_descendants()  # All child nodes
+    siblings = node.get_siblings()  # Same level, same parent
+    ```
+  </Tab>
+</Tabs>
+
+## ViewSets
+
+### Custom Base ViewSet
+
+Studio uses `ValuesViewset` for optimized read performance:
+
+```python
+# viewsets/base.py
+from rest_framework.viewsets import GenericViewSet
+
+class ValuesViewset(GenericViewSet):
+    """
+    Viewset that uses .values() for reads instead of serializer.
+    Significantly faster for large querysets.
+    """
+    values = ()  # Tuple of fields to return
+    field_map = {}  # Dict to rename/transform fields
+
+    def get_queryset(self):
+        """Override to filter queryset."""
+        return self.queryset
+
+    def prefetch_queryset(self, queryset):
+        """Add prefetch_related/select_related here."""
+        return queryset
+
+    def annotate_queryset(self, queryset):
+        """Add annotations before .values() call."""
+        return queryset
+
+    def consolidate(self, items, queryset):
+        """Post-process list of dicts after .values() call."""
+        return items
+```
+
+### Example ViewSet
+
+```python
+# viewsets/contentnode.py
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from .base import ValuesViewset, BulkModelSerializer, BulkListSerializer
+from contentcuration.models import ContentNode
+
+class ContentNodeViewset(ValuesViewset):
+    queryset = ContentNode.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    values = (
+        'id',
+        'title',
+        'description',
+        'kind_id',
+        'parent_id',
+        'channel_id',
+        'created',
+        'modified',
+    )
+
+    field_map = {
+        'kind': 'kind_id',  # Rename kind_id to kind
+    }
+
+    def get_queryset(self):
+        """Filter to nodes user can access."""
+        return ContentNode.objects.filter(
+            channel__editors=self.request.user
+        )
+
+    def annotate_queryset(self, queryset):
+        """Add computed fields."""
+        return queryset.annotate(
+            child_count=Count('children')
+        )
+
+    @action(detail=True, methods=['post'])
+    def copy(self, request, pk=None):
+        """Copy a node to another location."""
+        node = self.get_object()
+        target_id = request.data.get('target')
+        # Copy logic...
+        return Response({'id': copied_node.id})
+```
+
+### Serializers
+
+Use `BulkModelSerializer` for bulk operations:
+
+```python
+from .base import BulkModelSerializer, BulkListSerializer
+
+class ContentNodeSerializer(BulkModelSerializer):
+    class Meta:
+        model = ContentNode
+        fields = (
+            'id',
+            'title',
+            'description',
+            'kind',
+            'parent',
+            'channel',
+        )
+        list_serializer_class = BulkListSerializer
+
+    def validate_title(self, value):
+        """Custom validation."""
+        if not value.strip():
+            raise ValidationError("Title cannot be empty")
+        return value
+
+    def create(self, validated_data):
+        """Custom create logic."""
+        # Add automatic fields
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """Custom update logic."""
+        # Track modification
+        validated_data['modified_by'] = self.context['request'].user
+        return super().update(instance, validated_data)
+```
+
+## Bulk Operations
+
+The base viewset provides bulk create, update, and delete:
+
+```python
+# Client sends
+POST /api/contentnodes/bulk_create/
+[
+  {"title": "Node 1", "kind": "video", "parent": "abc123"},
+  {"title": "Node 2", "kind": "document", "parent": "abc123"},
+]
+
+PATCH /api/contentnodes/bulk_update/
+[
+  {"id": "node1", "title": "Updated Title"},
+  {"id": "node2", "description": "New description"},
+]
+
+DELETE /api/contentnodes/bulk_delete/
+["node1", "node2", "node3"]
+```
+
+Implementation:
+
+```python
+class ContentNodeViewset(ValuesViewset):
+    serializer_class = ContentNodeSerializer
+
+    def perform_bulk_create(self, serializer):
+        """Called during bulk create."""
+        # Add default values
+        serializer.save(created_by=self.request.user)
+
+    def perform_bulk_update(self, serializer):
+        """Called during bulk update."""
+        serializer.save(modified_by=self.request.user)
+```
+
+## Sync Endpoint
+
+The sync endpoint handles batched changes from the frontend:
+
+```python
+# viewsets/sync/endpoint.py
+from collections import OrderedDict
+from rest_framework.decorators import api_view
+from .constants import CREATED, UPDATED, DELETED, MOVED
+
+SYNC_MODELS = OrderedDict([
+    ('contentnode', ContentNodeViewset),
+    ('channel', ChannelViewset),
+    ('assessmentitem', AssessmentItemViewset),
+    ('file', FileViewset),
+])
+
+@api_view(['POST'])
+def sync(request):
+    """Process batched changes from frontend."""
+    changes = request.data.get('changes', [])
+    results = []
+    errors = []
+
+    # Group changes by table and type
+    grouped = group_changes(changes)
+
+    for table, change_type, items in grouped:
+        viewset = SYNC_MODELS[table]
+
+        try:
+            if change_type == CREATED:
+                viewset.bulk_create(items)
+            elif change_type == UPDATED:
+                viewset.bulk_update(items)
+            elif change_type == DELETED:
+                viewset.bulk_delete(items)
+            # ...
+        except ValidationError as e:
+            errors.append({'table': table, 'error': str(e)})
+
+    return Response({
+        'changes': results,
+        'errors': errors,
+    })
+```
+
+## Database Queries
+
+### Efficient Querying
+
+<Tabs>
+  <Tab title="Select Related">
+    Use `select_related()` for foreign key lookups:
+
+    ```python
+    # Bad - N+1 query problem
+    nodes = ContentNode.objects.all()
+    for node in nodes:
+        print(node.channel.name)  # Queries DB for each node!
+
+    # Good - single JOIN query
+    nodes = ContentNode.objects.select_related('channel')
+    for node in nodes:
+        print(node.channel.name)  # No additional queries
+    ```
+  </Tab>
+
+  <Tab title="Prefetch Related">
+    Use `prefetch_related()` for reverse foreign keys and many-to-many:
+
+    ```python
+    # Bad - N+1 queries
+    channels = Channel.objects.all()
+    for channel in channels:
+        print(channel.nodes.count())  # Query per channel!
+
+    # Good - prefetch in 2 queries total
+    channels = Channel.objects.prefetch_related('nodes')
+    for channel in channels:
+        print(channel.nodes.count())  # No additional queries
+    ```
+  </Tab>
+
+  <Tab title="Annotations">
+    Use `annotate()` for computed values:
+
+    ```python
+    from django.db.models import Count, Sum
+
+    channels = Channel.objects.annotate(
+        node_count=Count('nodes'),
+        total_size=Sum('nodes__files__file_size'),
+    )
+
+    for channel in channels:
+        print(f"{channel.name}: {channel.node_count} nodes")
+    ```
+  </Tab>
+
+  <Tab title="Values">
+    Use `.values()` to return dicts instead of model instances:
+
+    ```python
+    # Returns list of ContentNode objects
+    nodes = ContentNode.objects.all()
+
+    # Returns list of dicts - faster, less memory
+    node_data = ContentNode.objects.values(
+        'id', 'title', 'description'
+    )
+
+    # [{'id': '...', 'title': '...', 'description': '...'}, ...]
+    ```
+  </Tab>
+</Tabs>
+
+### Complex Queries
+
+```python
+from django.db.models import Q, F, Exists, OuterRef, Subquery
+
+# Q objects for complex filters
+nodes = ContentNode.objects.filter(
+    Q(kind='video') | Q(kind='audio'),
+    Q(published=True) & Q(public=True)
+)
+
+# F objects for field comparisons
+nodes = ContentNode.objects.filter(
+    modified__gt=F('created') + timedelta(days=7)
+)
+
+# Exists subquery
+from django.db.models import Exists, OuterRef
+
+has_files = File.objects.filter(contentnode=OuterRef('pk'))
+nodes_with_files = ContentNode.objects.filter(
+    Exists(has_files)
+)
+
+# Subquery for related values
+latest_file = File.objects.filter(
+    contentnode=OuterRef('pk')
+).order_by('-created')
+
+nodes = ContentNode.objects.annotate(
+    latest_file_id=Subquery(latest_file.values('id')[:1])
+)
+```
+
+## Celery Tasks
+
+Define async tasks for long-running operations:
+
+```python
+from celery import shared_task
+from contentcuration.models import Channel
+
+@shared_task(bind=True)
+def export_channel(self, channel_id):
+    """
+    Export channel to Kolibri format.
+    """
+    channel = Channel.objects.get(id=channel_id)
+
+    # Update task progress
+    self.update_state(
+        state='PROGRESS',
+        meta={'current': 0, 'total': 100}
+    )
+
+    # Perform export...
+    for i, node in enumerate(channel.nodes.all()):
+        # Export node...
+        self.update_state(
+            state='PROGRESS',
+            meta={'current': i, 'total': channel.nodes.count()}
+        )
+
+    return {'status': 'complete', 'channel_id': channel_id}
+
+# Trigger from viewset
+from .tasks import export_channel
+
+class ChannelViewset(ValuesViewset):
+    @action(detail=True, methods=['post'])
+    def export(self, request, pk=None):
+        task = export_channel.delay(pk)
+        return Response({'task_id': task.id})
+```
+
+## Testing
+
+Write tests using pytest:
+
+```python
+from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests import testdata
+from contentcuration.models import ContentNode
+
+class ContentNodeTest(StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+
+    def test_create_node(self):
+        """Test creating a content node."""
+        node = ContentNode.objects.create(
+            title='Test Node',
+            kind_id='video',
+            channel=self.channel,
+        )
+        self.assertEqual(node.title, 'Test Node')
+        self.assertEqual(node.kind_id, 'video')
+
+    def test_node_permissions(self):
+        """Test user can only access their channels."""
+        node = testdata.node({'channel': self.channel})
+        other_channel = testdata.channel()
+        other_node = testdata.node({'channel': other_channel})
+
+        # User can access own channel's nodes
+        self.channel.editors.add(self.user)
+        accessible = ContentNode.objects.filter(
+            channel__editors=self.user
+        )
+        self.assertIn(node, accessible)
+        self.assertNotIn(other_node, accessible)
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use ValuesViewset for read-heavy endpoints">
+    `ValuesViewset` is much faster than standard DRF serializers for reads. Use it when returning lists of objects.
+  </Accordion>
+
+  <Accordion title="Optimize queries with select_related/prefetch_related">
+    Always use `select_related()` for foreign keys and `prefetch_related()` for reverse relations to avoid N+1 queries.
+  </Accordion>
+
+  <Accordion title="Use bulk operations for multiple items">
+    Bulk create, update, and delete are much faster than individual operations. Always batch when possible.
+  </Accordion>
+
+  <Accordion title="Add indexes for filtered fields">
+    Add database indexes for fields frequently used in `WHERE` clauses:
+
+    ```python
+    class ContentNode(models.Model):
+        # ...
+        class Meta:
+            indexes = [
+                models.Index(fields=['channel', 'kind']),
+                models.Index(fields=['modified']),
+            ]
+    ```
+  </Accordion>
+
+  <Accordion title="Use Celery for long-running tasks">
+    Operations taking > 5 seconds should be async Celery tasks to avoid blocking the request/response cycle.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Testing" icon="vial" href="/development/testing">
+    Write comprehensive backend tests
+  </Card>
+  <Card title="Frontend Development" icon="vuejs" href="/development/frontend">
+    Connect backend APIs to frontend
+  </Card>
+</CardGroup>

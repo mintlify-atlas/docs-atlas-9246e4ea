@@ -1,0 +1,608 @@
+---
+title: Frontend Development
+description: Build Vue.js components and work with Vuex state management
+---
+
+Kolibri Studio's frontend is built with **Vue.js 2.7**, **Vuex**, and **IndexedDB** for offline-first editing.
+
+## Frontend Stack
+
+<CardGroup cols={2}>
+  <Card title="Vue.js 2.7" icon="vuejs">
+    Component framework with Composition API support
+  </Card>
+  <Card title="Vuex 3.x" icon="database">
+    State management pattern and library
+  </Card>
+  <Card title="Vue Router 3.x" icon="route">
+    Official router for Vue.js
+  </Card>
+  <Card title="Vuetify 1.5" icon="palette">
+    Material Design component framework
+  </Card>
+</CardGroup>
+
+## Project Structure
+
+Frontend code lives in `contentcuration/contentcuration/frontend/`:
+
+```
+frontend/
+├── channelEdit/          # Main channel editor SPA
+│   ├── index.js          # App entry point
+│   ├── router.js         # Route definitions
+│   ├── store.js          # Vuex store setup
+│   ├── pages/            # Page components
+│   ├── components/       # UI components
+│   └── vuex/             # Vuex modules
+│       ├── contentNode/
+│       ├── file/
+│       └── ...
+├── channelList/          # Channel list SPA
+├── shared/               # Shared code
+│   ├── data/             # Resources & IndexedDB
+│   ├── vuex/             # Shared Vuex modules
+│   ├── components/       # Reusable components
+│   └── utils/            # Helper functions
+└── ...
+```
+
+## Creating Components
+
+### Component Conventions
+
+<Steps>
+  <Step title="Create component file">
+    Place components in the appropriate directory:
+
+    - **Page components**: `<spa>/pages/`
+    - **SPA-specific components**: `<spa>/components/`
+    - **Shared components**: `shared/components/`
+
+    ```vue
+    <!-- channelEdit/components/ContentNodeCard.vue -->
+    <template>
+      <div class="content-node-card">
+        <h3>{{ node.title }}</h3>
+        <p>{{ node.description }}</p>
+      </div>
+    </template>
+
+    <script>
+    export default {
+      name: 'ContentNodeCard',
+      props: {
+        node: {
+          type: Object,
+          required: true,
+        },
+      },
+    };
+    </script>
+
+    <style scoped>
+    .content-node-card {
+      padding: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+    </style>
+    ```
+  </Step>
+
+  <Step title="Create test file">
+    Add tests in `__tests__/` directory:
+
+    ```javascript
+    // channelEdit/components/__tests__/ContentNodeCard.spec.js
+    import { render, screen } from '@testing-library/vue';
+    import ContentNodeCard from '../ContentNodeCard';
+
+    describe('ContentNodeCard', () => {
+      it('displays node title and description', () => {
+        const node = {
+          title: 'Test Node',
+          description: 'Test description',
+        };
+
+        render(ContentNodeCard, {
+          props: { node },
+        });
+
+        expect(screen.getByText('Test Node')).toBeInTheDocument();
+        expect(screen.getByText('Test description')).toBeInTheDocument();
+      });
+    });
+    ```
+  </Step>
+</Steps>
+
+### Import Paths
+
+Use Webpack aliases for cleaner imports:
+
+```javascript
+// Import from shared directory
+import { Channel } from 'shared/data/resources';
+import Checkbox from 'shared/components/Checkbox';
+
+// Import from same SPA (use relative paths)
+import ContentNodeCard from '../components/ContentNodeCard';
+import { loadChannelNodes } from '../vuex/contentNode/actions';
+```
+
+## Working with Vuex
+
+### Vuex Module Structure
+
+Vuex modules follow this pattern:
+
+```javascript
+// channelEdit/vuex/contentNode/index.js
+import * as getters from './getters';
+import * as mutations from './mutations';
+import * as actions from './actions';
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+
+export default {
+  namespaced: true,
+  state: () => ({
+    contentNodesMap: {},
+    expandedNodes: {},
+  }),
+  getters,
+  mutations,
+  actions,
+  listeners: {
+    // IndexedDB change listeners
+    [TABLE_NAMES.CONTENTNODE]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_CONTENTNODE',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_CONTENTNODE',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_CONTENTNODE',
+    },
+  },
+};
+```
+
+### State Management
+
+<Tabs>
+  <Tab title="State">
+    Define reactive state:
+
+    ```javascript
+    // state.js
+    export default {
+      contentNodesMap: {},
+      selectedNodeIds: [],
+      loading: false,
+    };
+    ```
+  </Tab>
+
+  <Tab title="Getters">
+    Compute derived state:
+
+    ```javascript
+    // getters.js
+    export function getContentNode(state) {
+      return id => state.contentNodesMap[id];
+    }
+
+    export function selectedNodes(state) {
+      return state.selectedNodeIds.map(id => state.contentNodesMap[id]);
+    }
+    ```
+  </Tab>
+
+  <Tab title="Mutations">
+    Synchronously modify state:
+
+    ```javascript
+    // mutations.js
+    export function ADD_CONTENTNODE(state, node) {
+      state.contentNodesMap[node.id] = node;
+    }
+
+    export function UPDATE_CONTENTNODE(state, node) {
+      state.contentNodesMap[node.id] = {
+        ...state.contentNodesMap[node.id],
+        ...node,
+      };
+    }
+
+    export function REMOVE_CONTENTNODE(state, nodeId) {
+      delete state.contentNodesMap[nodeId];
+    }
+    ```
+  </Tab>
+
+  <Tab title="Actions">
+    Handle async operations:
+
+    ```javascript
+    // actions.js
+    import { ContentNode } from 'shared/data/resources';
+
+    export async function loadContentNodes(context, { parent }) {
+      context.commit('SET_LOADING', true);
+
+      try {
+        const nodes = await ContentNode.where({ parent });
+        nodes.forEach(node => {
+          context.commit('ADD_CONTENTNODE', node);
+        });
+        return nodes;
+      } finally {
+        context.commit('SET_LOADING', false);
+      }
+    }
+
+    export async function updateContentNode(context, { id, ...changes }) {
+      await ContentNode.update(id, changes);
+      // Mutation triggered automatically via IndexedDB listener
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Using Vuex in Components
+
+```vue
+<template>
+  <div>
+    <div v-if="loading">Loading...</div>
+    <ContentNodeCard
+      v-for="node in childNodes"
+      :key="node.id"
+      :node="node"
+    />
+  </div>
+</template>
+
+<script>
+import { mapGetters, mapActions, mapState } from 'vuex';
+import ContentNodeCard from '../components/ContentNodeCard';
+
+export default {
+  name: 'ContentNodeList',
+  components: { ContentNodeCard },
+  props: {
+    parentId: {
+      type: String,
+      required: true,
+    },
+  },
+  computed: {
+    ...mapState('contentNode', ['loading']),
+    ...mapGetters('contentNode', ['getContentNode']),
+    childNodes() {
+      return this.getContentNode(this.parentId)?.children || [];
+    },
+  },
+  methods: {
+    ...mapActions('contentNode', ['loadContentNodes']),
+  },
+  async mounted() {
+    await this.loadContentNodes({ parent: this.parentId });
+  },
+};
+</script>
+```
+
+## IndexedDB Resources
+
+### Using the Resource API
+
+The Resource API provides a unified interface for data operations:
+
+```javascript
+import { Channel, ContentNode } from 'shared/data/resources';
+
+// Query data
+const publicChannels = await Channel.where({ public: true });
+const editableChannels = await Channel.where({ edit: true });
+
+// Get single item
+const channel = await Channel.get(channelId);
+
+// Create
+const newNode = await ContentNode.put({
+  title: 'New Node',
+  kind: 'video',
+  parent: parentId,
+});
+
+// Update
+await ContentNode.update(nodeId, {
+  title: 'Updated Title',
+});
+
+// Delete
+await ContentNode.delete(nodeId);
+```
+
+### Advanced Queries
+
+```javascript
+// Query with suffixes
+const recentChannels = await Channel.where({
+  modified__gte: lastWeek,  // Greater than or equal
+  published: true,
+});
+
+// Multiple values
+const specificChannels = await Channel.where({
+  id__in: [id1, id2, id3],  // IN query
+});
+
+// Ordering
+const orderedChannels = await Channel.where(
+  { public: true },
+  { ordering: '-modified' }  // Descending by modified
+);
+```
+
+### IndexedDB Listeners
+
+Vuex modules automatically listen to IndexedDB changes:
+
+```javascript
+// channelEdit/vuex/contentNode/index.js
+export default {
+  namespaced: true,
+  // ... state, mutations, etc.
+  listeners: {
+    [TABLE_NAMES.CONTENTNODE]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_CONTENTNODE',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_CONTENTNODE',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_CONTENTNODE',
+    },
+  },
+};
+```
+
+When any code changes a ContentNode in IndexedDB, the corresponding Vuex mutation fires automatically.
+
+## Routing
+
+### Define Routes
+
+```javascript
+// channelEdit/router.js
+import VueRouter from 'vue-router';
+import ChannelEditPage from './pages/ChannelEditPage';
+import TreeViewPage from './pages/TreeViewPage';
+
+const routes = [
+  {
+    path: '/channels/:channelId',
+    name: 'ChannelEdit',
+    component: ChannelEditPage,
+    props: true,
+  },
+  {
+    path: '/channels/:channelId/tree/:nodeId?',
+    name: 'TreeView',
+    component: TreeViewPage,
+    props: true,
+  },
+];
+
+export default new VueRouter({
+  mode: 'history',
+  routes,
+});
+```
+
+### Navigate Programmatically
+
+```javascript
+// Navigate to route
+this.$router.push({
+  name: 'TreeView',
+  params: { channelId: 'abc123', nodeId: 'node456' },
+});
+
+// Navigate with query params
+this.$router.push({
+  name: 'ChannelEdit',
+  params: { channelId: 'abc123' },
+  query: { tab: 'details' },
+});
+
+// Go back
+this.$router.go(-1);
+```
+
+## Build Commands
+
+<CodeGroup>
+```bash Development Server (Hot Reload)
+pnpm run devserver:hot
+```
+
+```bash Development Server
+pnpm run devserver
+```
+
+```bash Production Build
+pnpm run build
+```
+
+```bash Run Tests
+pnpm run test
+```
+
+```bash Watch Tests
+pnpm run test-jest:dev
+```
+</CodeGroup>
+
+## Testing Components
+
+Use **Jest** with **@testing-library/vue** for component tests:
+
+```javascript
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import Vuex from 'vuex';
+import MyComponent from '../MyComponent';
+
+describe('MyComponent', () => {
+  let store;
+
+  beforeEach(() => {
+    store = new Vuex.Store({
+      state: { items: [] },
+      mutations: {
+        ADD_ITEM(state, item) {
+          state.items.push(item);
+        },
+      },
+    });
+  });
+
+  it('renders correctly', () => {
+    render(MyComponent, {
+      store,
+      props: { title: 'Test' },
+    });
+
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  it('handles user interaction', async () => {
+    render(MyComponent, { store });
+
+    const button = screen.getByRole('button', { name: 'Add' });
+    await userEvent.click(button);
+
+    await waitFor(() => {
+      expect(store.state.items).toHaveLength(1);
+    });
+  });
+});
+```
+
+## Common Patterns
+
+### Loading Data on Mount
+
+```vue
+<script>
+export default {
+  async mounted() {
+    await this.loadData();
+  },
+  methods: {
+    async loadData() {
+      this.loading = true;
+      try {
+        const data = await Channel.where({ edit: true });
+        this.channels = data;
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+};
+</script>
+```
+
+### Computed Properties with Vuex
+
+```vue
+<script>
+import { mapGetters, mapState } from 'vuex';
+
+export default {
+  computed: {
+    ...mapState('contentNode', ['loading']),
+    ...mapGetters('contentNode', ['getContentNode']),
+    currentNode() {
+      return this.getContentNode(this.nodeId);
+    },
+  },
+};
+</script>
+```
+
+### Form Handling
+
+```vue
+<template>
+  <form @submit.prevent="handleSubmit">
+    <input v-model="form.title" type="text" />
+    <textarea v-model="form.description" />
+    <button type="submit">Save</button>
+  </form>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      form: {
+        title: '',
+        description: '',
+      },
+    };
+  },
+  methods: {
+    async handleSubmit() {
+      await ContentNode.update(this.nodeId, this.form);
+      this.$router.push({ name: 'NodeList' });
+    },
+  },
+};
+</script>
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Resource API for all data operations">
+    Always use the Resource API instead of direct API calls. It handles caching, IndexedDB storage, and sync automatically.
+
+    ```javascript
+    // Good
+    const channel = await Channel.get(id);
+
+    // Bad - don't use axios directly
+    const { data } = await axios.get(`/api/channels/${id}`);
+    ```
+  </Accordion>
+
+  <Accordion title="Let IndexedDB listeners update Vuex">
+    Don't manually commit mutations after Resource updates - listeners handle it:
+
+    ```javascript
+    // Good - mutation fires via listener
+    await ContentNode.update(id, { title: 'New' });
+
+    // Bad - redundant manual commit
+    await ContentNode.update(id, { title: 'New' });
+    this.$store.commit('contentNode/UPDATE_CONTENTNODE', ...);
+    ```
+  </Accordion>
+
+  <Accordion title="Keep components focused">
+    Components should be focused on a single responsibility. Extract reusable logic into mixins or composables.
+  </Accordion>
+
+  <Accordion title="Write tests for components">
+    Every component should have tests in `__tests__/` directory. Test user interactions and edge cases.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Development" icon="python" href="/development/backend">
+    Learn about Django models and viewsets
+  </Card>
+  <Card title="Testing" icon="vial" href="/development/testing">
+    Write comprehensive tests
+  </Card>
+</CardGroup>

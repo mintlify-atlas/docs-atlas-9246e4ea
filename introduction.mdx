@@ -1,0 +1,142 @@
+---
+title: Introduction
+description: Learn about Kolibri Studio and how it helps you create educational content for offline learning
+---
+
+## What is Kolibri Studio?
+
+Kolibri Studio is a web-based content curation platform that enables educators and content creators to organize, edit, and publish educational materials for use with [Kolibri](https://learningequality.org/kolibri/), an offline learning platform designed for low-resource environments.
+
+<CardGroup cols={2}>
+  <Card title="For Content Creators" icon="book-open">
+    Curate and organize educational resources into structured channels
+  </Card>
+  <Card title="For Developers" icon="code">
+    Integrate programmatically using the ricecooker SDK and REST API
+  </Card>
+  <Card title="For Educators" icon="chalkboard-user">
+    Remix existing content and align it to local curricula
+  </Card>
+  <Card title="For Communities" icon="users">
+    Collaborate with teams to build comprehensive learning libraries
+  </Card>
+</CardGroup>
+
+## Key features
+
+### Channel management
+
+Organize content into **channels** — curated collections of educational materials that can be published and imported into Kolibri. Each channel can contain topics, videos, exercises, documents, and more, arranged in a hierarchical tree structure.
+
+### Content curation
+
+- **Import from library**: Browse and remix content from thousands of existing public channels
+- **Upload your own**: Add videos, PDFs, ePubs, HTML5 apps, and exercises
+- **Organize with topics**: Create hierarchical topic trees to structure your content
+- **Rich metadata**: Add descriptions, tags, language, licenses, and learning objectives
+
+### Collaboration
+
+Invite team members to collaborate on channels with role-based permissions:
+
+- **View access**: Browse channel content without making changes
+- **Edit access**: Add, modify, and organize content
+- **Admin access**: Manage channel settings and team members
+
+### Offline-first editing
+
+Studio uses IndexedDB to store changes locally, enabling you to edit content even with unreliable internet connections. Changes are automatically synchronized when connectivity is restored.
+
+### Publishing workflow
+
+Studio provides a staging and publishing workflow:
+
+1. **Edit**: Make changes to your channel in the editing tree
+2. **Stage**: Review changes in the staging tree before publishing
+3. **Publish**: Make your channel available for import into Kolibri
+4. **Version**: Each publish creates a new version that Kolibri can update to
+
+## Content types
+
+Studio supports multiple content types:
+
+- **Video**: MP4, WebM files with subtitles
+- **Document**: PDF, ePub documents
+- **Exercise**: Interactive questions with mastery tracking
+- **HTML5**: Interactive apps and simulations
+- **Audio**: MP3 audio files
+- **H5P**: Interactive H5P content packages
+- **Slideshow**: Slide presentations
+
+Learn more about [content types](/concepts/content-types).
+
+## Programmatic import
+
+For large-scale content import, use [ricecooker](/integrations/ricecooker), a Python SDK that automates content upload and channel creation. Ricecooker is ideal for:
+
+- Scraping and importing content from online sources
+- Converting content from one format to another
+- Bulk importing content from existing databases
+- Automating channel updates
+
+## Integration with Kolibri
+
+Once published, channels are available for import into Kolibri instances. Kolibri uses Studio's public API to:
+
+- Discover available channels
+- Download channel metadata and content files
+- Check for channel updates
+- Import channels for offline access
+
+Learn more about [Kolibri integration](/integrations/kolibri).
+
+## Use cases
+
+<AccordionGroup>
+  <Accordion title="Ministry of Education">
+    Curate and distribute national curriculum-aligned content to schools without internet access. Organize content by grade level, subject, and learning standards.
+  </Accordion>
+  <Accordion title="NGO and nonprofit organizations">
+    Create specialized content libraries for refugee camps, rural communities, or disaster relief scenarios. Collaborate with local educators to adapt content to community needs.
+  </Accordion>
+  <Accordion title="Content creators">
+    Package your educational videos, courses, and exercises for distribution through Kolibri. Reach learners in areas with limited internet connectivity.
+  </Accordion>
+  <Accordion title="Teachers and schools">
+    Remix existing content from the public library to create custom learning paths aligned to your classroom needs. Supplement textbooks with videos and interactive exercises.
+  </Accordion>
+</AccordionGroup>
+
+## Getting started
+
+<Steps>
+  <Step title="Create an account">
+    Sign up for a free account at [studio.learningequality.org](https://studio.learningequality.org)
+  </Step>
+  <Step title="Explore the public library">
+    Browse thousands of existing channels to find content you can remix
+  </Step>
+  <Step title="Create your first channel">
+    Follow our [quickstart guide](/quickstart) to create and publish your first channel
+  </Step>
+  <Step title="Invite collaborators">
+    Add team members to help curate and organize content
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first channel in 5 minutes
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/concepts/channels">
+    Understand how Studio organizes content
+  </Card>
+  <Card title="User Guide" icon="users" href="/guide/creating-channels">
+    Learn how to create and manage channels
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate with Studio programmatically
+  </Card>
+</CardGroup>

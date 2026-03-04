@@ -1,0 +1,317 @@
+---
+title: "Files"
+description: "Manage file uploads and file metadata"
+---
+
+The Files API handles file uploads, storage, and metadata management for content resources.
+
+## Endpoints
+
+### List Files
+
+<CodeGroup>
+```bash GET /api/file
+curl -H "Authorization: Token YOUR_TOKEN" \
+  "https://studio.learningequality.org/api/file?contentnode__in={node_id}"
+```
+</CodeGroup>
+
+Retrieve files with optional filters.
+
+<ParamField query="id__in" type="string">
+  Filter by multiple file IDs (comma-separated)
+</ParamField>
+
+<ParamField query="contentnode__in" type="string">
+  Filter by content node IDs (comma-separated)
+</ParamField>
+
+<ParamField query="assessment_item__in" type="string">
+  Filter by assessment item IDs (comma-separated)
+</ParamField>
+
+<ParamField query="id" type="string">
+  Filter by specific file ID
+</ParamField>
+
+<ParamField query="contentnode" type="string">
+  Filter by specific content node ID
+</ParamField>
+
+<ParamField query="assessment_item" type="string">
+  Filter by specific assessment item ID
+</ParamField>
+
+<ResponseExample>
+```json Response
+[
+  {
+    "id": "file-id-123",
+    "checksum": "abc123def456",
+    "file_size": 1048576,
+    "file_format": "mp4",
+    "preset": "high_res_video",
+    "language": "en",
+    "contentnode": "node-id-456",
+    "assessment_item": null,
+    "url": "https://storage.example.com/abc123def456.mp4",
+    "original_filename": "video.mp4",
+    "uploaded_by": "user-id-789",
+    "duration": 300
+  }
+]
+```
+</ResponseExample>
+
+### Get Upload URL
+
+<CodeGroup>
+```bash POST /api/file/upload_url
+curl -X POST \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "size": 1048576,
+    "checksum": "abc123def456789012345678901234",
+    "name": "video.mp4",
+    "file_format": "mp4",
+    "preset": "high_res_video",
+    "duration": 300
+  }' \
+  https://studio.learningequality.org/api/file/upload_url
+```
+</CodeGroup>
+
+Get a presigned upload URL for uploading a file to storage.
+
+<ParamField body="size" type="number" required>
+  File size in bytes
+</ParamField>
+
+<ParamField body="checksum" type="string" required>
+  MD5 checksum of the file (32 hexadecimal characters)
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Original filename
+</ParamField>
+
+<ParamField body="file_format" type="string" required>
+  File format/extension (e.g., "mp4", "pdf", "jpg")
+</ParamField>
+
+<ParamField body="preset" type="string" required>
+  Format preset ID (e.g., "high_res_video", "video", "audio", "document", "exercise_image")
+</ParamField>
+
+<ParamField body="duration" type="number">
+  Duration in seconds (required for audio/video files, must be greater than 0)
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "url": "https://storage.example.com/upload?signature=...",
+  "might_skip": false,
+  "file": {
+    "id": "file-id-123",
+    "checksum": "abc123def456789012345678901234",
+    "file_size": 1048576,
+    "file_format": "mp4",
+    "preset": "high_res_video",
+    "duration": 300,
+    "original_filename": "video.mp4",
+    "uploaded_by": "user-id-789"
+  }
+}
+```
+</ResponseExample>
+
+<Note>
+The `might_skip` field indicates whether a file with this checksum already exists in storage. If true, the upload might be skipped if the file is already available.
+</Note>
+
+### Update File
+
+<CodeGroup>
+```bash PATCH /api/file/{id}
+curl -X PATCH \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contentnode": "node-id-456",
+    "language": "es",
+    "preset": "video"
+  }' \
+  https://studio.learningequality.org/api/file/{id}
+```
+</CodeGroup>
+
+Update file metadata and associations.
+
+<ParamField path="id" type="string" required>
+  File UUID
+</ParamField>
+
+<ParamField body="contentnode" type="string">
+  Content node ID to associate with this file
+</ParamField>
+
+<ParamField body="assessment_item" type="string">
+  Assessment item ID to associate with this file
+</ParamField>
+
+<ParamField body="language" type="string">
+  Language code for the file
+</ParamField>
+
+<ParamField body="preset" type="string">
+  Format preset ID
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  Duration in seconds (for audio/video)
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "id": "file-id-123",
+  "contentnode": "node-id-456",
+  "language": "es",
+  "preset": "video",
+  "duration": 300
+}
+```
+</ResponseExample>
+
+### Delete File
+
+<CodeGroup>
+```bash DELETE /api/file/{id}
+curl -X DELETE \
+  -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/file/{id}
+```
+</CodeGroup>
+
+Delete a file and its metadata.
+
+<ParamField path="id" type="string" required>
+  File UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "status": "success"
+}
+```
+</ResponseExample>
+
+## File Upload Process
+
+<Steps>
+  <Step title="Request Upload URL">
+    Call the `upload_url` endpoint with file metadata to get a presigned URL
+  </Step>
+  <Step title="Upload File">
+    Use the presigned URL to upload the file directly to object storage
+  </Step>
+  <Step title="Associate with Content">
+    Update the file to associate it with a content node or assessment item
+  </Step>
+</Steps>
+
+## File Model Fields
+
+<ResponseField name="id" type="string">
+  Unique file identifier (UUID)
+</ResponseField>
+
+<ResponseField name="checksum" type="string">
+  MD5 checksum of the file content
+</ResponseField>
+
+<ResponseField name="file_size" type="integer">
+  File size in bytes
+</ResponseField>
+
+<ResponseField name="file_format" type="string">
+  File format/extension (e.g., "mp4", "pdf", "jpg")
+</ResponseField>
+
+<ResponseField name="preset" type="string">
+  Format preset ID indicating the file type and purpose
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Language code for the file content
+</ResponseField>
+
+<ResponseField name="contentnode" type="string">
+  Associated content node ID
+</ResponseField>
+
+<ResponseField name="assessment_item" type="string">
+  Associated assessment item ID
+</ResponseField>
+
+<ResponseField name="file_on_disk" type="string">
+  Storage path for the file
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Full URL to access the file
+</ResponseField>
+
+<ResponseField name="original_filename" type="string">
+  Original filename when uploaded
+</ResponseField>
+
+<ResponseField name="uploaded_by" type="string">
+  User ID who uploaded the file
+</ResponseField>
+
+<ResponseField name="duration" type="integer">
+  Duration in seconds (for audio/video files)
+</ResponseField>
+
+## File Format Presets
+
+Common preset values:
+
+- `high_res_video` - High resolution video files
+- `video` - Standard video files  
+- `audio` - Audio files
+- `document` - Document files (PDF, ePub, etc.)
+- `exercise` - Exercise content
+- `exercise_image` - Images used in exercises
+- `exercise_graphie` - Graphie files for exercises
+- `channel_thumbnail` - Channel thumbnail images
+- `topic_thumbnail` - Topic thumbnail images
+- `video_thumbnail` - Video thumbnail images
+- `audio_thumbnail` - Audio thumbnail images
+- `document_thumbnail` - Document thumbnail images
+- `html5_zip` - HTML5 app zip files
+- `html5_thumbnail` - HTML5 app thumbnails
+- `video_subtitle` - Video subtitle files
+- `video_dependency` - Video dependency files
+- `html5_dependency` - HTML5 dependency files
+
+## File Format Validation
+
+<Warning>
+  - Audio and video files **must** include a `duration` parameter
+  - The `file_format` must be compatible with the selected `preset`
+  - File checksums must be exactly 32 hexadecimal characters
+  - Users must have sufficient storage space available
+</Warning>
+
+## Storage and Checksums
+
+Files are stored in object storage using a checksum-based naming system:
+- Files are deduplicated by checksum
+- Multiple content items can reference the same file
+- Checksums ensure file integrity
+- Files are only stored once even if used multiple times

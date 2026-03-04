@@ -1,0 +1,374 @@
+---
+title: Collaboration
+description: Invite team members and manage permissions for collaborative content curation
+---
+
+Kolibri Studio supports multi-user collaboration, allowing teams to work together on creating and curating educational content. You can invite collaborators with different permission levels to suit their roles.
+
+## Permission levels
+
+Studio has three permission levels for channel collaborators:
+
+<CardGroup cols={3}>
+  <Card title="View Access" icon="eye">
+    Browse channel content without making changes
+  </Card>
+  <Card title="Edit Access" icon="pen">
+    Add, modify, and organize content
+  </Card>
+  <Card title="Admin Access" icon="user-shield">
+    Full control including settings and team management
+  </Card>
+</CardGroup>
+
+### View access
+
+**Can do**:
+- Browse channel content
+- Preview resources
+- View channel metadata
+- See version history
+- Export channel info
+
+**Cannot do**:
+- Add or edit content
+- Delete resources
+- Change channel settings
+- Invite other users
+- Publish the channel
+
+**Use cases**:
+- Reviewers who need to see content without editing
+- Stakeholders monitoring progress
+- Quality assurance team members
+
+### Edit access
+
+**Can do**:
+- Everything view access can do, plus:
+- Add new topics and resources
+- Edit metadata (titles, descriptions, tags)
+- Upload and replace files
+- Move and reorganize content
+- Delete content (moves to trash)
+- Import content from other channels
+- Create exercises and questions
+
+**Cannot do**:
+- Change channel settings (name, license, visibility)
+- Manage collaborators
+- Publish the channel
+- Delete the channel
+
+**Use cases**:
+- Content creators and curators
+- Subject matter experts
+- Instructional designers
+- Most team members
+
+<Note>
+  Edit access is the most common permission level for active contributors.
+</Note>
+
+### Admin access (channel creator)
+
+**Can do**:
+- Everything edit access can do, plus:
+- Modify channel settings
+- Invite and remove collaborators
+- Change collaborator permissions
+- Publish the channel
+- Delete the channel
+- Transfer ownership
+
+**Cannot do**:
+- Nothing — admins have full control
+
+**Use cases**:
+- Project managers
+- Team leads
+- Channel creators
+- Trusted senior team members
+
+## Inviting collaborators
+
+<Steps>
+  <Step title="Open the channel">
+    Navigate to the channel you want to share.
+  </Step>
+  <Step title="Access sharing settings">
+    Click **Channel** → **Share** (or the share icon in the toolbar).
+  </Step>
+  <Step title="Enter email address">
+    Type the email address of the person you want to invite.
+    
+    <Info>
+      The email address must match their Studio account email. If they don't have an account, they'll receive an invitation to create one.
+    </Info>
+  </Step>
+  <Step title="Select permission level">
+    Choose **View** or **Edit** access from the dropdown.
+  </Step>
+  <Step title="Send invitation">
+    Click **Invite** to send the invitation email.
+  </Step>
+</Steps>
+
+### What happens next
+
+1. The invitee receives an email invitation
+2. If they don't have a Studio account, they'll be prompted to create one
+3. After accepting, the channel appears in their channel dashboard
+4. They can start viewing or editing based on their permission level
+
+<Warning>
+  Invitations expire after 30 days. If the invitee doesn't accept in time, you'll need to send a new invitation.
+</Warning>
+
+## Managing collaborators
+
+### Viewing current collaborators
+
+<Steps>
+  <Step title="Open sharing settings">
+    Go to **Channel** → **Share**.
+  </Step>
+  <Step title="View the collaborator list">
+    You'll see all users with access to the channel, their permission levels, and invitation status.
+  </Step>
+</Steps>
+
+### Changing permissions
+
+To change a collaborator's permission level:
+
+<Steps>
+  <Step title="Open sharing settings">
+    Go to **Channel** → **Share**.
+  </Step>
+  <Step title="Find the collaborator">
+    Locate them in the list.
+  </Step>
+  <Step title="Change permission level">
+    Use the dropdown to select a new permission level (View or Edit).
+  </Step>
+  <Step title="Save changes">
+    The change takes effect immediately.
+  </Step>
+</Steps>
+
+<Info>
+  You cannot change the permission level of the channel creator (admin). To transfer admin rights, use the **Transfer ownership** feature.
+</Info>
+
+### Removing collaborators
+
+<Steps>
+  <Step title="Open sharing settings">
+    Go to **Channel** → **Share**.
+  </Step>
+  <Step title="Find the collaborator">
+    Locate them in the list.
+  </Step>
+  <Step title="Click remove">
+    Click the **X** or **Remove** button next to their name.
+  </Step>
+  <Step title="Confirm removal">
+    Confirm in the dialog. The channel will be removed from their dashboard.
+  </Step>
+</Steps>
+
+<Warning>
+  Removed collaborators lose access immediately. They won't be notified automatically, so consider informing them if appropriate.
+</Warning>
+
+### Resending invitations
+
+If a collaborator hasn't accepted their invitation:
+
+<Steps>
+  <Step title="Open sharing settings">
+    Go to **Channel** → **Share**.
+  </Step>
+  <Step title="Find the pending invitation">
+    Look for users with "Pending" status.
+  </Step>
+  <Step title="Resend">
+    Click **Resend invitation** to send the email again.
+  </Step>
+</Steps>
+
+## Transferring ownership
+
+You can transfer admin rights to another collaborator:
+
+<Steps>
+  <Step title="Open channel settings">
+    Go to **Channel** → **Settings**.
+  </Step>
+  <Step title="Find transfer ownership">
+    Scroll to the "Transfer Ownership" section.
+  </Step>
+  <Step title="Select new owner">
+    Choose a collaborator from the dropdown (must already have edit or view access).
+  </Step>
+  <Step title="Confirm transfer">
+    Click **Transfer ownership** and confirm.
+    
+    <Warning>
+      **This cannot be undone**. You will become an editor, and the new owner will have admin rights. They can remove you from the channel if they choose.
+    </Warning>
+  </Step>
+</Steps>
+
+## Collaboration workflows
+
+### Workflow 1: Content creation team
+
+**Roles**:
+- **Project manager**: Admin access
+- **Content creators**: Edit access
+- **Reviewers**: View access
+
+**Process**:
+1. Project manager creates channel and invites team
+2. Content creators add and organize materials
+3. Reviewers check content for accuracy and quality
+4. Feedback is shared via comments or external tools
+5. Content creators make revisions
+6. Project manager publishes when ready
+
+### Workflow 2: Curriculum alignment
+
+**Roles**:
+- **Curriculum specialist**: Admin access
+- **Subject matter experts**: Edit access
+- **Teachers**: View access (for feedback)
+
+**Process**:
+1. Curriculum specialist creates channel structure (topics aligned to standards)
+2. Subject matter experts fill in content for their domains
+3. Teachers review and provide feedback on relevance and appropriateness
+4. Specialists adjust based on feedback
+5. Curriculum specialist publishes
+
+### Workflow 3: Remix and localization
+
+**Roles**:
+- **Lead editor**: Admin access
+- **Translators**: Edit access
+- **Reviewers**: View access
+
+**Process**:
+1. Lead editor imports content from public library
+2. Translators add subtitles, translated documents, or localized descriptions
+3. Reviewers check translations for accuracy
+4. Lead editor adjusts channel metadata for local context
+5. Publish for regional use
+
+## Best practices
+
+### Clear roles and responsibilities
+
+- Define what each team member is responsible for
+- Assign appropriate permission levels
+- Document the workflow and decision-making process
+
+### Communication
+
+- Use external tools for detailed feedback (Google Docs, Slack, email)
+- Studio doesn't have built-in comments, so establish a communication channel
+- Schedule regular check-ins for larger projects
+
+### Version control
+
+- Avoid multiple people editing the same content simultaneously
+- Use the staging tree for review before publishing
+- Publish frequently to create clear checkpoints
+
+### Onboarding new collaborators
+
+- Provide an overview of the channel's purpose and structure
+- Share guidelines for metadata, licensing, and quality standards
+- Start with view access and upgrade to edit after training
+
+### Security
+
+- Only invite people you trust
+- Remove collaborators who no longer need access
+- Don't share channel tokens publicly if the channel is private
+- Regularly review the collaborator list
+
+## Troubleshooting
+
+### Collaborator didn't receive invitation
+
+**Possible causes**:
+- Email in spam folder
+- Incorrect email address
+- Email delivery issues
+
+**Solutions**:
+- Ask them to check spam/junk folders
+- Verify the email address is correct
+- Resend the invitation
+- Use an alternative communication method to share the invite link
+
+### Collaborator can't edit content
+
+**Check**:
+- Do they have edit access (not just view access)?
+- Is the channel deleted or archived?
+- Are they logged into the correct Studio account?
+
+### Changes not syncing
+
+- Studio syncs changes periodically (every few seconds)
+- Refresh the page to see others' changes
+- Check for a "Sync error" message (may indicate connectivity issues)
+
+### Collaborator removed by mistake
+
+- Re-invite them using the same process
+- They'll regain access but won't see the history of when they were removed
+
+## Collaboration with external tools
+
+### Google Sheets for content tracking
+
+Use a shared spreadsheet to track:
+- Content production status
+- Reviewer assignments
+- Feedback and revision notes
+- Metadata checklists
+
+### Project management tools
+
+Use Trello, Asana, or similar tools to:
+- Assign tasks to team members
+- Track progress on content creation
+- Manage deadlines and milestones
+
+### Communication platforms
+
+Use Slack, Microsoft Teams, or email for:
+- Quick questions and updates
+- Sharing feedback on specific content
+- Coordinating publishing schedules
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Creating Channels" icon="plus" href="/guide/creating-channels">
+    Learn how to set up a new channel for your team
+  </Card>
+  <Card title="Publishing" icon="upload" href="/guide/publishing">
+    Understand the publishing workflow and version control
+  </Card>
+  <Card title="User API" icon="code" href="/api/users">
+    Automate user and invitation management via API
+  </Card>
+  <Card title="Invitations API" icon="envelope" href="/api/invitations">
+    Programmatically invite collaborators
+  </Card>
+</CardGroup>

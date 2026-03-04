@@ -1,0 +1,598 @@
+---
+title: Testing
+description: Run and write tests for Kolibri Studio frontend and backend
+---
+
+Kolibri Studio uses **Jest** for frontend tests and **pytest** for backend tests.
+
+## Test Structure
+
+<Tabs>
+  <Tab title="Frontend (Jest)">
+    Frontend tests use Jest with @testing-library/vue:
+
+    ```
+    frontend/
+    ├── channelEdit/
+    │   ├── components/
+    │   │   ├── ContentNodeCard.vue
+    │   │   └── __tests__/
+    │   │       └── ContentNodeCard.spec.js
+    │   └── pages/
+    │       ├── TreeView.vue
+    │       └── __tests__/
+    │           └── TreeView.spec.js
+    └── shared/
+        └── utils/
+            ├── helpers.js
+            └── __tests__/
+                └── helpers.spec.js
+    ```
+  </Tab>
+
+  <Tab title="Backend (pytest)">
+    Backend tests use pytest:
+
+    ```
+    contentcuration/
+    ├── models.py
+    ├── viewsets/
+    │   └── contentnode.py
+    └── tests/
+        ├── base.py
+        ├── test_models.py
+        ├── test_viewsets.py
+        └── testdata.py
+    ```
+  </Tab>
+</Tabs>
+
+## Running Tests
+
+### Frontend Tests
+
+<CodeGroup>
+```bash Run All Tests
+pnpm run test
+```
+
+```bash Run Specific File
+pnpm run test contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js
+```
+
+```bash Watch Mode (Auto-rerun)
+pnpm run test-jest:dev
+```
+
+```bash Watch Specific File
+pnpm run test-jest:dev contentcuration/contentcuration/frontend/channelEdit/components/__tests__/ContentNodeCard.spec.js
+```
+</CodeGroup>
+
+### Backend Tests
+
+<Info>
+  Make sure you've installed development dependencies and started services (PostgreSQL, Redis, Minio) before running tests.
+</Info>
+
+<CodeGroup>
+```bash Run All Tests
+make test
+# or
+pytest
+```
+
+```bash Reuse Database (Faster)
+pytest --reuse-db
+```
+
+```bash Run Specific File
+pytest contentcuration/contentcuration/tests/test_utils.py
+```
+
+```bash Run Specific Test
+pytest -k test_we_are_testing
+```
+
+```bash Show Print Statements
+pytest -s
+```
+
+```bash Watch Mode (Auto-rerun)
+ptw contentcuration -- --reuse-db
+```
+</CodeGroup>
+
+### Tests in Docker
+
+You can run tests inside Docker containers:
+
+```bash
+# Backend tests
+docker-compose run studio-app make test
+
+# Frontend tests
+docker-compose run studio-app pnpm run test
+
+# With custom options
+docker-compose run studio-app pytest --reuse-db -k test_channel
+```
+
+## Writing Frontend Tests
+
+### Component Tests
+
+Use @testing-library/vue for component testing:
+
+```javascript
+// ContentNodeCard.spec.js
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import ContentNodeCard from '../ContentNodeCard';
+
+describe('ContentNodeCard', () => {
+  const defaultProps = {
+    node: {
+      id: 'node123',
+      title: 'Test Node',
+      description: 'Test description',
+      kind: 'video',
+    },
+  };
+
+  it('renders node information', () => {
+    render(ContentNodeCard, {
+      props: defaultProps,
+    });
+
+    expect(screen.getByText('Test Node')).toBeInTheDocument();
+    expect(screen.getByText('Test description')).toBeInTheDocument();
+  });
+
+  it('handles click events', async () => {
+    const onClick = jest.fn();
+
+    render(ContentNodeCard, {
+      props: defaultProps,
+      listeners: {
+        click: onClick,
+      },
+    });
+
+    await userEvent.click(screen.getByText('Test Node'));
+    expect(onClick).toHaveBeenCalled();
+  });
+
+  it('shows loading state', () => {
+    render(ContentNodeCard, {
+      props: {
+        ...defaultProps,
+        loading: true,
+      },
+    });
+
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+});
+```
+
+### Vuex Store Tests
+
+Test Vuex modules independently:
+
+```javascript
+// contentNode.spec.js
+import Vuex from 'vuex';
+import contentNodeModule from '../index';
+import { ContentNode } from 'shared/data/resources';
+
+jest.mock('shared/data/resources');
+
+describe('contentNode store', () => {
+  let store;
+
+  beforeEach(() => {
+    store = new Vuex.Store({
+      modules: {
+        contentNode: contentNodeModule,
+      },
+    });
+  });
+
+  describe('mutations', () => {
+    it('ADD_CONTENTNODE adds node to map', () => {
+      const node = { id: 'node123', title: 'Test' };
+      store.commit('contentNode/ADD_CONTENTNODE', node);
+
+      expect(store.state.contentNode.contentNodesMap['node123']).toEqual(node);
+    });
+  });
+
+  describe('actions', () => {
+    it('loadContentNodes fetches and commits nodes', async () => {
+      const mockNodes = [
+        { id: 'node1', title: 'Node 1' },
+        { id: 'node2', title: 'Node 2' },
+      ];
+
+      ContentNode.where.mockResolvedValue(mockNodes);
+
+      await store.dispatch('contentNode/loadContentNodes', {
+        parent: 'parent123',
+      });
+
+      expect(ContentNode.where).toHaveBeenCalledWith({
+        parent: 'parent123',
+      });
+      expect(store.state.contentNode.contentNodesMap['node1']).toEqual(mockNodes[0]);
+      expect(store.state.contentNode.contentNodesMap['node2']).toEqual(mockNodes[1]);
+    });
+  });
+
+  describe('getters', () => {
+    it('getContentNode returns node by id', () => {
+      const node = { id: 'node123', title: 'Test' };
+      store.commit('contentNode/ADD_CONTENTNODE', node);
+
+      const getter = store.getters['contentNode/getContentNode'];
+      expect(getter('node123')).toEqual(node);
+    });
+  });
+});
+```
+
+### Router Tests
+
+Test components with Vue Router:
+
+```javascript
+import VueRouter from 'vue-router';
+import { render, screen } from '@testing-library/vue';
+import ChannelEditPage from '../ChannelEditPage';
+
+const routes = [
+  { path: '/channels/:channelId', name: 'ChannelEdit', component: ChannelEditPage },
+];
+
+describe('ChannelEditPage', () => {
+  it('loads channel based on route params', async () => {
+    const router = new VueRouter({ routes });
+    router.push({ name: 'ChannelEdit', params: { channelId: 'channel123' } });
+
+    render(ChannelEditPage, {
+      router,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('channel123')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+## Writing Backend Tests
+
+### Model Tests
+
+Test Django models using StudioTestCase:
+
+```python
+from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests import testdata
+from contentcuration.models import ContentNode, Channel
+
+class ContentNodeModelTest(StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+
+    def test_create_node(self):
+        """Test creating a content node."""
+        node = ContentNode.objects.create(
+            title='Test Node',
+            kind_id='video',
+            channel=self.channel,
+        )
+        self.assertEqual(node.title, 'Test Node')
+        self.assertEqual(node.channel, self.channel)
+
+    def test_node_tree_structure(self):
+        """Test MPTT tree structure."""
+        parent = testdata.node({'title': 'Parent', 'channel': self.channel})
+        child1 = testdata.node({'title': 'Child 1', 'parent': parent})
+        child2 = testdata.node({'title': 'Child 2', 'parent': parent})
+
+        self.assertEqual(parent.get_children().count(), 2)
+        self.assertIn(child1, parent.get_children())
+        self.assertIn(child2, parent.get_children())
+
+    def test_node_deletion_cascades(self):
+        """Test deleting parent deletes children."""
+        parent = testdata.node({'channel': self.channel})
+        child = testdata.node({'parent': parent})
+
+        parent_id = parent.id
+        child_id = child.id
+
+        parent.delete()
+
+        self.assertFalse(ContentNode.objects.filter(id=parent_id).exists())
+        self.assertFalse(ContentNode.objects.filter(id=child_id).exists())
+```
+
+### ViewSet Tests
+
+Test API endpoints:
+
+```python
+from rest_framework.test import APITestCase
+from rest_framework import status
+from contentcuration.tests import testdata
+
+class ContentNodeViewSetTest(APITestCase):
+    def setUp(self):
+        self.user = testdata.user()
+        self.channel = testdata.channel()
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def test_list_nodes(self):
+        """Test listing content nodes."""
+        node1 = testdata.node({'channel': self.channel, 'title': 'Node 1'})
+        node2 = testdata.node({'channel': self.channel, 'title': 'Node 2'})
+
+        response = self.client.get('/api/contentnodes/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_create_node(self):
+        """Test creating a node via API."""
+        data = {
+            'title': 'New Node',
+            'kind': 'video',
+            'channel': self.channel.id,
+        }
+
+        response = self.client.post('/api/contentnodes/', data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['title'], 'New Node')
+
+    def test_update_node(self):
+        """Test updating a node."""
+        node = testdata.node({'channel': self.channel, 'title': 'Old Title'})
+
+        response = self.client.patch(
+            f'/api/contentnodes/{node.id}/',
+            {'title': 'New Title'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        node.refresh_from_db()
+        self.assertEqual(node.title, 'New Title')
+
+    def test_permissions(self):
+        """Test users can only access their channels."""
+        other_channel = testdata.channel()
+        other_node = testdata.node({'channel': other_channel})
+
+        response = self.client.get(f'/api/contentnodes/{other_node.id}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+```
+
+### Celery Task Tests
+
+Test async tasks:
+
+```python
+from unittest.mock import patch, MagicMock
+from contentcuration.tasks import export_channel
+from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests import testdata
+
+class ExportChannelTaskTest(StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+
+    @patch('contentcuration.tasks.some_export_function')
+    def test_export_channel(self, mock_export):
+        """Test channel export task."""
+        result = export_channel(self.channel.id)
+
+        mock_export.assert_called_once()
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['channel_id'], self.channel.id)
+```
+
+## Test Utilities
+
+### Test Data Helpers
+
+Use `testdata` module to create test objects:
+
+```python
+from contentcuration.tests import testdata
+
+# Create channel
+channel = testdata.channel({
+    'name': 'Test Channel',
+    'public': True,
+})
+
+# Create user
+user = testdata.user(email='test@example.com')
+
+# Create content node
+node = testdata.node({
+    'title': 'Test Node',
+    'kind_id': 'video',
+    'channel': channel,
+})
+
+# Create with relationships
+parent = testdata.node({'channel': channel})
+child = testdata.node({'parent': parent})
+```
+
+### Mocking
+
+<Tabs>
+  <Tab title="Frontend (Jest)">
+    ```javascript
+    // Mock modules
+    jest.mock('shared/data/resources');
+    import { Channel } from 'shared/data/resources';
+
+    Channel.where.mockResolvedValue([{ id: '1', name: 'Test' }]);
+
+    // Mock functions
+    const mockFn = jest.fn();
+    mockFn.mockReturnValue('result');
+    mockFn.mockResolvedValue('async result');
+
+    // Verify calls
+    expect(mockFn).toHaveBeenCalled();
+    expect(mockFn).toHaveBeenCalledWith('arg1', 'arg2');
+    ```
+  </Tab>
+
+  <Tab title="Backend (Python)">
+    ```python
+    from unittest.mock import patch, MagicMock
+
+    # Mock function
+    @patch('contentcuration.utils.some_function')
+    def test_something(self, mock_function):
+        mock_function.return_value = 'result'
+        # test code...
+        mock_function.assert_called_once()
+
+    # Mock object
+    mock_obj = MagicMock()
+    mock_obj.method.return_value = 'value'
+    ```
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Test behavior, not implementation">
+    Focus on testing what users see and experience, not internal implementation details.
+
+    ```javascript
+    // Good - tests user-facing behavior
+    expect(screen.getByText('Success!')).toBeInTheDocument();
+
+    // Bad - tests implementation
+    expect(component.vm.successMessage).toBe('Success!');
+    ```
+  </Accordion>
+
+  <Accordion title="Use descriptive test names">
+    Test names should clearly describe what is being tested:
+
+    ```python
+    # Good
+    def test_user_cannot_edit_other_users_channels(self):
+
+    # Bad
+    def test_permissions(self):
+    ```
+  </Accordion>
+
+  <Accordion title="Arrange-Act-Assert pattern">
+    Structure tests in three parts:
+
+    ```javascript
+    it('adds node to favorites', async () => {
+      // Arrange - set up test data
+      const node = { id: 'node123', title: 'Test' };
+
+      // Act - perform action
+      await userEvent.click(screen.getByRole('button', { name: 'Favorite' }));
+
+      // Assert - verify result
+      expect(screen.getByText('Favorited')).toBeInTheDocument();
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="Isolate tests">
+    Each test should be independent and not rely on other tests:
+
+    ```python
+    def setUp(self):
+        # Reset state before each test
+        super().setUp()
+        self.channel = testdata.channel()
+    ```
+  </Accordion>
+
+  <Accordion title="Use --reuse-db for backend tests">
+    Speed up backend tests by reusing the database:
+
+    ```bash
+    pytest --reuse-db
+    ```
+
+    This avoids recreating the database schema on every run.
+  </Accordion>
+</AccordionGroup>
+
+## Continuous Integration
+
+Tests run automatically on GitHub Actions:
+
+- **Python tests**: `.github/workflows/pythontest.yml`
+- **JavaScript tests**: `.github/workflows/frontendtest.yml`
+
+Badges:
+- [![Python tests](https://github.com/learningequality/studio/actions/workflows/pythontest.yml/badge.svg)](https://github.com/learningequality/studio/actions/workflows/pythontest.yml)
+- [![Javascript Tests](https://github.com/learningequality/studio/actions/workflows/frontendtest.yml/badge.svg)](https://github.com/learningequality/studio/actions/workflows/frontendtest.yml)
+
+## Debugging Tests
+
+<Tabs>
+  <Tab title="Frontend">
+    Debug Jest tests in VS Code or Chrome DevTools:
+
+    ```bash
+    # Debug in terminal
+    pnpm run test-jest:debug
+    ```
+
+    Then open `chrome://inspect` in Chrome and click "Inspect".
+  </Tab>
+
+  <Tab title="Backend">
+    Use `pytest` with debugger:
+
+    ```python
+    # Add breakpoint in test
+    import pdb; pdb.set_trace()
+
+    # Or use pytest's built-in debugger
+    pytest --pdb
+    ```
+
+    Show print statements:
+
+    ```bash
+    pytest -s
+    ```
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="screwdriver-wrench" href="/development/setup">
+    Set up your development environment
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Understand the codebase structure
+  </Card>
+</CardGroup>

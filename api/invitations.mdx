@@ -1,0 +1,311 @@
+---
+title: "Invitations"
+description: "Invite users to channels and manage invitation lifecycle"
+---
+
+## Overview
+
+The Invitation API allows channel editors to invite other users to collaborate on channels. Invitations can be accepted, declined, or revoked, and support both edit and view-only access modes.
+
+## Base Endpoint
+
+```
+GET /api/invitation/
+```
+
+## Authentication
+
+All Invitation API endpoints require authentication. Users can only view and manage invitations they have sent or received.
+
+## Invitation Object
+
+The Invitation object contains the following fields:
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the invitation (UUID)
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Email address of the invited user (max 100 characters)
+</ResponseField>
+
+<ResponseField name="channel" type="string" required>
+  ID of the channel to which the user is invited
+</ResponseField>
+
+<ResponseField name="channel_name" type="string">
+  Name of the channel (read-only)
+</ResponseField>
+
+<ResponseField name="share_mode" type="string" required>
+  Access level for the invitation: `"edit"` or `"view"`
+</ResponseField>
+
+<ResponseField name="first_name" type="string">
+  First name of the invited user (max 100 characters, optional)
+</ResponseField>
+
+<ResponseField name="last_name" type="string">
+  Last name of the invited user (max 100 characters, optional)
+</ResponseField>
+
+<ResponseField name="accepted" type="boolean">
+  Whether the invitation has been accepted (default: false)
+</ResponseField>
+
+<ResponseField name="declined" type="boolean">
+  Whether the invitation has been declined (default: false)
+</ResponseField>
+
+<ResponseField name="revoked" type="boolean">
+  Whether the invitation has been revoked by the sender (default: false)
+</ResponseField>
+
+<ResponseField name="sender_name" type="string">
+  Full name of the user who sent the invitation (read-only)
+</ResponseField>
+
+## List Invitations
+
+Retrieve invitations sent to or by the authenticated user.
+
+```http
+GET /api/invitation/
+```
+
+### Query Parameters
+
+<ParamField query="invited" type="string">
+  Filter invitations sent to the authenticated user's email address
+</ParamField>
+
+<ParamField query="channel" type="string">
+  Filter invitations by channel ID
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://studio.learningequality.org/api/invitation/?channel=abc123" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "id": "inv123-4567-8901-abcd",
+    "email": "collaborator@example.com",
+    "channel": "abc123",
+    "channel_name": "Mathematics Course",
+    "share_mode": "edit",
+    "first_name": "John",
+    "last_name": "Doe",
+    "accepted": false,
+    "declined": false,
+    "revoked": false,
+    "sender_name": "Jane Smith"
+  }
+]
+```
+
+## Create Invitation
+
+Invite a user to collaborate on a channel.
+
+```http
+POST /api/invitation/
+```
+
+### Request Body
+
+<ParamField body="email" type="string" required>
+  Email address of the user to invite
+</ParamField>
+
+<ParamField body="channel" type="string" required>
+  ID of the channel to share
+</ParamField>
+
+<ParamField body="share_mode" type="string" required>
+  Access level: `"edit"` for edit access or `"view"` for view-only access
+</ParamField>
+
+<ParamField body="first_name" type="string">
+  First name of the invited user (optional)
+</ParamField>
+
+<ParamField body="last_name" type="string">
+  Last name of the invited user (optional)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://studio.learningequality.org/api/invitation/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "collaborator@example.com",
+    "channel": "abc123",
+    "share_mode": "edit",
+    "first_name": "John",
+    "last_name": "Doe"
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "id": "inv123-4567-8901-abcd",
+  "email": "collaborator@example.com",
+  "channel": "abc123",
+  "share_mode": "edit",
+  "first_name": "John",
+  "last_name": "Doe",
+  "accepted": false,
+  "declined": false,
+  "revoked": false
+}
+```
+
+## Accept Invitation
+
+Accept an invitation to collaborate on a channel.
+
+```http
+POST /api/invitation/{id}/accept/
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  ID of the invitation to accept
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://studio.learningequality.org/api/invitation/inv123-4567-8901-abcd/accept/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "status": "success"
+}
+```
+
+When an invitation is accepted:
+- If `share_mode` is `"edit"`, the user is added to the channel's editors
+- If `share_mode` is `"view"`, the user is added to the channel's viewers
+- The invitation's `accepted` field is set to `true`
+
+## Decline Invitation
+
+Decline an invitation to collaborate on a channel.
+
+```http
+POST /api/invitation/{id}/decline/
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  ID of the invitation to decline
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://studio.learningequality.org/api/invitation/inv123-4567-8901-abcd/decline/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "status": "success"
+}
+```
+
+## Update Invitation
+
+Update an invitation (revoke or modify fields).
+
+```http
+PATCH /api/invitation/{id}/
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  ID of the invitation to update
+</ParamField>
+
+### Request Body
+
+<ParamField body="revoked" type="boolean">
+  Set to `true` to revoke the invitation (only available to sender)
+</ParamField>
+
+<ParamField body="accepted" type="boolean">
+  Set to `true` to accept the invitation (only available to invited user, cannot be set if revoked)
+</ParamField>
+
+<ParamField body="declined" type="boolean">
+  Set to `true` to decline the invitation (only available to invited user)
+</ParamField>
+
+### Example Request (Revoke)
+
+```bash
+curl -X PATCH "https://studio.learningequality.org/api/invitation/inv123-4567-8901-abcd/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "revoked": true
+  }'
+```
+
+## Permissions
+
+Invitation access is controlled as follows:
+
+- **Create**: User must have edit access to the channel
+- **View**: User can view invitations they sent or received, or for channels they edit
+- **Accept/Decline**: Only the invited user can accept or decline (cannot accept if revoked)
+- **Revoke**: Only the sender can revoke an invitation
+
+## Access Modes
+
+<ResponseField name="edit">
+  Full edit access to the channel. User can create, modify, and delete content.
+</ResponseField>
+
+<ResponseField name="view">
+  View-only access to the channel. User can browse content but cannot make changes.
+</ResponseField>
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  Invalid request parameters, missing required fields, or user attempting to accept a revoked invitation
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Missing or invalid authentication token
+</ResponseField>
+
+<ResponseField name="403 Forbidden">
+  User does not have permission to create, modify, or accept the invitation
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Invitation or channel not found
+</ResponseField>

@@ -1,0 +1,202 @@
+---
+title: "Users"
+description: "Manage user accounts and retrieve user information"
+---
+
+## Overview
+
+The User API allows you to retrieve user information, manage storage usage, and mark notifications as read. All endpoints require authentication.
+
+## Base Endpoint
+
+```
+GET /api/user/
+```
+
+## Authentication
+
+All User API endpoints require authentication. Include your authentication token in the request headers.
+
+## User Object
+
+The User object contains the following fields:
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the user (UUID)
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  User's email address (unique, max 100 characters)
+</ResponseField>
+
+<ResponseField name="first_name" type="string" required>
+  User's first name (max 100 characters)
+</ResponseField>
+
+<ResponseField name="last_name" type="string" required>
+  User's last name (max 100 characters)
+</ResponseField>
+
+<ResponseField name="is_active" type="boolean" required>
+  Whether the user account is active
+</ResponseField>
+
+<ResponseField name="editable_channels" type="array">
+  Array of channel IDs where the user has edit permissions
+</ResponseField>
+
+<ResponseField name="view_only_channels" type="array">
+  Array of channel IDs where the user has view-only permissions
+</ResponseField>
+
+<ResponseField name="disk_space" type="float">
+  Total disk space allocated to the user in bytes (default: 524288000)
+</ResponseField>
+
+<ResponseField name="disk_space_used" type="float">
+  Amount of disk space currently used by the user in bytes
+</ResponseField>
+
+## List Users
+
+Retrieve a list of users based on filter criteria.
+
+```http
+GET /api/user/
+```
+
+### Query Parameters
+
+<ParamField query="ids" type="string">
+  Comma-separated list of user IDs to fetch (max 50)
+</ParamField>
+
+<ParamField query="channel" type="string">
+  Filter users by channel ID. Returns users with edit access to the specified channel.
+</ParamField>
+
+<ParamField query="include_viewonly" type="boolean">
+  When used with `channel` parameter, also includes users with view-only access
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://studio.learningequality.org/api/user/?channel=abc123&include_viewonly=true" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "id": "a1b2c3d4-e5f6-4789-9012-3456789abcde",
+    "email": "teacher@example.com",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "is_active": true,
+    "editable_channels": ["abc123", "def456"],
+    "view_only_channels": ["ghi789"]
+  }
+]
+```
+
+## Get Storage Used
+
+Retrieve the current storage space used by the authenticated user.
+
+```http
+GET /api/user/get_storage_used/
+```
+
+### Example Request
+
+```bash
+curl -X GET "https://studio.learningequality.org/api/user/get_storage_used/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+256450000
+```
+
+Returns the number of bytes currently used by the user.
+
+## Refresh Storage Used
+
+Recalculate and update the storage space used by the authenticated user.
+
+```http
+GET /api/user/refresh_storage_used/
+```
+
+### Example Request
+
+```bash
+curl -X GET "https://studio.learningequality.org/api/user/refresh_storage_used/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+256450000
+```
+
+Returns the recalculated number of bytes currently used by the user.
+
+## Mark Notifications Read
+
+Mark all notifications as read up to a specific timestamp.
+
+```http
+POST /api/user/mark_notifications_read/
+```
+
+### Request Body
+
+<ParamField body="timestamp" type="string" required>
+  ISO 8601 timestamp of the last read notification
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://studio.learningequality.org/api/user/mark_notifications_read/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "timestamp": "2024-03-15T10:30:00Z"
+  }'
+```
+
+### Example Response
+
+Returns HTTP 204 No Content on success.
+
+## Permissions
+
+All User API endpoints require:
+- **Authentication**: User must be logged in (`IsAuthenticated`)
+- **Scope**: Users can only access their own information unless they have admin privileges
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  Invalid request parameters or malformed data
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Missing or invalid authentication token
+</ResponseField>
+
+<ResponseField name="403 Forbidden">
+  User does not have permission to access the requested resource
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  User or resource not found
+</ResponseField>

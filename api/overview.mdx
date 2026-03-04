@@ -1,0 +1,180 @@
+---
+title: 'API Overview'
+description: 'Introduction to the Kolibri Studio REST API'
+---
+
+## Introduction
+
+The Kolibri Studio REST API provides programmatic access to create, manage, and publish educational content channels. The API is built with Django REST Framework and supports both session-based and token-based authentication.
+
+## Base URL Structure
+
+All API endpoints are prefixed with `/api/`:
+
+```
+https://studio.learningequality.org/api/
+```
+
+For local development:
+
+```
+http://127.0.0.1:8000/api/
+```
+
+## API Versioning
+
+Most Studio API endpoints are unversioned and use the `/api/` prefix directly. Public endpoints for Kolibri integration include version numbers:
+
+- `/api/public/v1/channels` - Public channel listing
+- `/api/public/v1/channels/lookup/{identifier}` - Channel lookup by ID or token
+
+## Self-Documenting API
+
+Studio provides a browsable, self-documenting API interface. When running the application, navigate to the API root to explore all available endpoints:
+
+```
+http://127.0.0.1:8000/api/
+```
+
+The browsable API provides:
+- Interactive endpoint exploration
+- Request/response examples
+- Available methods for each endpoint
+- Input field documentation
+
+## Core API Resources
+
+The Studio API provides access to the following main resources:
+
+### Content Management
+- **Channel** (`/api/channel/`) - Channel creation and management
+- **ContentNode** (`/api/contentnode/`) - Content nodes and tree structure
+- **File** (`/api/file/`) - File uploads and management
+- **AssessmentItem** (`/api/assessmentitem/`) - Assessment questions and exercises
+
+### User & Collaboration
+- **User** (`/api/user/`) - User accounts and profiles
+- **Invitation** (`/api/invitation/`) - Channel collaboration invitations
+- **Bookmark** (`/api/bookmark/`) - User bookmarks
+
+### Organization
+- **ChannelSet** (`/api/channelset/`) - Collections of related channels
+- **Clipboard** (`/api/clipboard/`) - User clipboard operations
+
+### Search & Discovery
+- **Catalog** (`/api/catalog/`) - Public channel catalog
+- **Search** (`/api/search/`) - Content search functionality
+
+## Internal Endpoints
+
+The API includes internal endpoints primarily used by ricecooker (the content integration tool):
+
+- `/api/internal/authenticate_user_internal` - Token validation
+- `/api/internal/create_channel` - Programmatic channel creation
+- `/api/internal/add_nodes` - Add content nodes to tree
+- `/api/internal/finish_channel` - Commit channel changes
+- `/api/internal/publish_channel` - Publish channel for Kolibri export
+- `/api/internal/file_upload` - Upload content files
+- `/api/internal/file_diff` - Check which files exist on server
+
+## Response Formats
+
+The API returns JSON responses with the following structure:
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+### List Response
+
+Paginated list endpoints return:
+
+```json
+{
+  "count": 100,
+  "next": "https://studio.learningequality.org/api/channel/?page=2",
+  "previous": null,
+  "results": [ ... ]
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": "Error message",
+  "detail": "Detailed error description"
+}
+```
+
+## Error Handling
+
+The API uses standard HTTP status codes:
+
+| Code | Meaning |
+|------|----------|
+| 200 | Success |
+| 201 | Created - Resource successfully created |
+| 204 | No Content - Success with no response body |
+| 400 | Bad Request - Invalid parameters or request body |
+| 401 | Unauthorized - Missing or invalid authentication |
+| 403 | Forbidden - Authenticated but lacking permissions |
+| 404 | Not Found - Resource does not exist |
+| 405 | Method Not Allowed - HTTP method not supported |
+| 500 | Internal Server Error - Server-side error |
+
+### Common Error Scenarios
+
+**Invalid Token**
+```bash
+HTTP 401 Unauthorized
+{
+  "detail": "Invalid token."
+}
+```
+
+**Insufficient Permissions**
+```bash
+HTTP 403 Forbidden
+{
+  "detail": "You do not have permission to perform this action."
+}
+```
+
+**Validation Error**
+```bash
+HTTP 400 Bad Request
+{
+  "field_name": ["This field is required."]
+}
+```
+
+## Rate Limits
+
+Currently, Studio does not enforce API rate limits. However, consider implementing client-side throttling for bulk operations to avoid overwhelming the server.
+
+## Pagination
+
+List endpoints support pagination with query parameters:
+
+- `page` - Page number (starts at 1)
+- `page_size` - Results per page (max 1000)
+
+```bash
+GET /api/channel/?page=2&page_size=50
+```
+
+## Next Steps
+
+<Card title="Authentication" icon="key" href="/api/authentication">
+  Learn how to authenticate your API requests with tokens
+</Card>
+
+<Card title="API Reference" icon="code" href="/api-reference/channels/list">
+  Explore detailed endpoint documentation
+</Card>

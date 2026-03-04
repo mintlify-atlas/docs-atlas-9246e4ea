@@ -1,0 +1,364 @@
+---
+title: 'Content types'
+description: 'Overview of all supported content kinds in Kolibri Studio'
+icon: 'shapes'
+---
+
+Kolibri Studio supports multiple content types (also called "kinds") to accommodate different types of educational materials. Each content type has specific characteristics and supported file formats.
+
+## Available content kinds
+
+The content kinds are defined in `le_utils.constants.content_kinds` and available in Studio:
+
+```javascript
+// From ContentKinds.js
+const ContentKinds = new Set([
+  'audio',
+  'document',
+  'exercise',
+  'h5p',
+  'html5',
+  'slideshow',
+  'topic',
+  'video',
+  'zim',
+]);
+```
+
+## Topic
+
+```python
+kind_id = "topic"
+```
+
+Topics are container nodes that organize other content into a hierarchical structure.
+
+**Characteristics:**
+- Cannot have files attached
+- Can contain child nodes (other topics or resources)
+- Form the navigation structure of your channel
+- Not counted as resources in channel statistics
+
+**Use cases:**
+- Course modules
+- Subject categories
+- Unit folders
+- Organizational hierarchy
+
+## Video
+
+```python
+kind_id = "video"
+```
+
+Video content for instructional materials, lectures, demonstrations, and more.
+
+**Supported formats:**
+- MP4 (H.264)
+- WebM
+- Subtitles (VTT)
+- Thumbnails
+
+**Default learning activity:** Watch
+
+**Use cases:**
+- Lecture recordings
+- Instructional demonstrations
+- Educational documentaries
+- Animated explanations
+
+<Info>
+Videos can have multiple subtitle tracks in different languages and quality levels for adaptive streaming.
+</Info>
+
+## Document
+
+```python
+kind_id = "document"
+```
+
+Text-based learning materials and reference documents.
+
+**Supported formats:**
+- PDF
+- ePub
+- Thumbnails
+
+**Default learning activity:** Read
+
+**Use cases:**
+- Textbooks
+- Worksheets
+- Reference materials
+- Reading passages
+- Study guides
+
+## Audio
+
+```python
+kind_id = "audio"
+```
+
+Audio-only educational content.
+
+**Supported formats:**
+- MP3
+- Thumbnails
+
+**Default learning activity:** Listen
+
+**Use cases:**
+- Language learning recordings
+- Podcasts
+- Audio lectures
+- Music education
+- Pronunciation guides
+
+## Exercise
+
+```python
+kind_id = "exercise"
+```
+
+Interactive practice activities with assessment items.
+
+**Characteristics:**
+- Contains assessment items (questions)
+- Tracks learner mastery
+- Supports multiple question types
+- Configurable mastery criteria
+
+**Default learning activity:** Practice
+
+**Question types:**
+- Multiple choice (single select)
+- Multiple choice (multiple select)
+- True/false
+- Numeric input
+- Free text input
+- Perseus exercises (interactive math)
+
+**Mastery models:**
+From `le_utils.constants.exercises`:
+
+```python
+NUM_CORRECT_IN_A_ROW_3  # 3 correct in a row
+NUM_CORRECT_IN_A_ROW_5  # 5 correct in a row (default)
+NUM_CORRECT_IN_A_ROW_10 # 10 correct in a row
+M_OUT_OF_N              # Custom M out of N attempts
+```
+
+Mastery configuration stored in `extra_fields`:
+
+```json
+{
+  "type": "num_correct_in_a_row_5",
+  "m": 5,
+  "n": 5
+}
+```
+
+**Use cases:**
+- Practice problems
+- Formative assessments
+- Quizzes
+- Skill checks
+
+## HTML5
+
+```python
+kind_id = "html5"
+```
+
+Interactive HTML5 applications and simulations.
+
+**Characteristics:**
+- Uploaded as ZIP archives
+- Must contain an `index.html` entry point
+- Can include JavaScript, CSS, images, etc.
+- Runs in an isolated iframe
+
+**Use cases:**
+- Interactive simulations
+- Educational games
+- Custom web applications
+- PhET Interactive Simulations
+- Interactive diagrams
+
+<Warning>
+HTML5 apps must be self-contained. External resources (CDNs, external APIs) won't work in offline Kolibri environments.
+</Warning>
+
+## H5P
+
+```python
+kind_id = "h5p"
+```
+
+H5P (HTML5 Package) interactive content created with the H5P authoring tool.
+
+**Characteristics:**
+- Uploaded as `.h5p` files
+- Supports 50+ H5P content types
+- Interactive and engaging
+
+**Popular H5P types:**
+- Interactive Video
+- Course Presentation
+- Drag and Drop
+- Fill in the Blanks
+- Timeline
+- Image Hotspots
+
+**Use cases:**
+- Interactive presentations
+- Gamified learning
+- Interactive infographics
+- Branching scenarios
+
+## Slideshow
+
+```python
+kind_id = "slideshow"
+```
+
+Sequential presentation of images.
+
+**Characteristics:**
+- Multiple image files displayed in sequence
+- Learner-controlled navigation
+
+**Supported formats:**
+- PNG
+- JPEG
+
+**Default learning activity:** Read
+
+**Use cases:**
+- Image-based tutorials
+- Photo essays
+- Step-by-step instructions
+- Visual sequences
+
+## ZIM
+
+```python
+kind_id = "zim"
+```
+
+ZIM files are compressed archives of websites, particularly Wikipedia content.
+
+**Characteristics:**
+- Entire websites packaged for offline use
+- Efficient compression
+- Full-text search support
+
+**Use cases:**
+- Wikipedia snapshots
+- WikiHow articles
+- Offline website archives
+- Reference encyclopedias
+
+<Info>
+ZIM files from [Kiwix](https://www.kiwix.org/) can be directly imported into Kolibri Studio.
+</Info>
+
+## Content kind model
+
+The `ContentKind` model is referenced by content nodes:
+
+```python
+class ContentNode(MPTTModel, models.Model):
+    kind = models.ForeignKey(
+        "ContentKind",
+        related_name="contentnodes",
+        db_index=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+```
+
+## File format associations
+
+Each content kind supports specific file formats defined in format presets (`le_utils.constants.format_presets`):
+
+```python
+# Example preset structure
+class FormatPreset:
+    id: str              # Preset identifier
+    readable_name: str   # Display name
+    kind: str           # Associated content kind
+    allowed_formats: List[str]  # Permitted file extensions
+    multi_language: bool
+    supplementary: bool
+    thumbnail: bool
+    subtitle: bool
+```
+
+## Choosing the right content type
+
+<AccordionGroup>
+  <Accordion title="For instructional videos or demonstrations">
+    Use **Video** content type. Supports multiple formats and subtitle tracks.
+  </Accordion>
+  
+  <Accordion title="For practice and assessment">
+    Use **Exercise** content type. Configure mastery criteria and create various question types.
+  </Accordion>
+  
+  <Accordion title="For interactive simulations">
+    Use **HTML5** or **H5P** depending on your source:
+    - **H5P**: Content created with H5P authoring tools
+    - **HTML5**: Custom web applications or existing simulations
+  </Accordion>
+  
+  <Accordion title="For reading materials">
+    Use **Document** for PDFs and ePubs, or **Slideshow** for image-based content.
+  </Accordion>
+  
+  <Accordion title="For organizing content">
+    Use **Topic** to create folders and organize resources hierarchically.
+  </Accordion>
+</AccordionGroup>
+
+## Content completion criteria
+
+Different content types have different completion criteria in Kolibri:
+
+- **Video/Audio**: Completed when played to a certain percentage
+- **Document**: Completed when opened and scrolled
+- **Exercise**: Completed when mastery criteria are met
+- **HTML5/H5P**: Completed based on internal logic or time spent
+
+## Default learning activities
+
+From `ContentKindLearningActivityDefaults` mapping:
+
+```javascript
+{
+  AUDIO: 'listen',
+  DOCUMENT: 'read', 
+  VIDEO: 'watch',
+  EXERCISE: 'practice',
+  SLIDESHOW: 'read'
+}
+```
+
+These can be overridden in the content node's `learning_activities` field.
+
+## Related models
+
+- [Content nodes](/concepts/content-nodes) - The tree structure containing content
+- [Licensing](/concepts/licensing) - License requirements for content
+- [Channels](/concepts/channels) - The container for content
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Licensing" icon="certificate" href="/concepts/licensing">
+    Understand licensing requirements for different content types
+  </Card>
+  <Card title="Organizing content" icon="folder-tree" href="/guide/organizing-content">
+    Learn how to structure content in your channel
+  </Card>
+</CardGroup>

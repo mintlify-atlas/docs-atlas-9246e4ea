@@ -1,0 +1,332 @@
+---
+title: "Channel Users"
+description: "Manage users and permissions for specific channels"
+---
+
+## Overview
+
+The Channel User API allows channel editors to view and manage users who have access to their channels. This includes adding/removing editors and viewers, and managing permission levels.
+
+## Base Endpoint
+
+```
+GET /api/channeluser/
+```
+
+## Authentication
+
+All Channel User API endpoints require authentication. Users can only manage users for channels they have edit access to.
+
+## Channel User Object
+
+The Channel User object extends the User object with channel-specific permission fields:
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the user (UUID)
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  User's email address
+</ResponseField>
+
+<ResponseField name="first_name" type="string" required>
+  User's first name
+</ResponseField>
+
+<ResponseField name="last_name" type="string" required>
+  User's last name
+</ResponseField>
+
+<ResponseField name="is_active" type="boolean" required>
+  Whether the user account is active
+</ResponseField>
+
+<ResponseField name="can_edit" type="boolean" required>
+  Whether the user has edit permissions for the channel
+</ResponseField>
+
+<ResponseField name="can_view" type="boolean" required>
+  Whether the user has view-only permissions for the channel
+</ResponseField>
+
+## List Channel Users
+
+Retrieve all users with access to a specific channel.
+
+```http
+GET /api/channeluser/?channel={channel_id}
+```
+
+### Query Parameters
+
+<ParamField query="channel" type="string" required>
+  Channel ID to retrieve users for (required filter)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://studio.learningequality.org/api/channeluser/?channel=abc123" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "id": "user123-4567-8901-abcd",
+    "email": "editor@example.com",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "is_active": true,
+    "can_edit": true,
+    "can_view": false
+  },
+  {
+    "id": "user456-7890-1234-efgh",
+    "email": "viewer@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "is_active": true,
+    "can_edit": false,
+    "can_view": true
+  }
+]
+```
+
+Users are returned sorted by first name, then last name.
+
+## Add Channel Editor
+
+Add a user as an editor to a channel using the sync API.
+
+```http
+POST /api/channeluser/
+```
+
+### Request Body
+
+Use the sync API format to add editors:
+
+```json
+{
+  "changes": [
+    {
+      "type": "CREATED",
+      "table": "editor_m2m",
+      "key": ["user_id", "channel_id"],
+      "user_id": "user123-4567-8901-abcd",
+      "channel_id": "abc123"
+    }
+  ]
+}
+```
+
+### Example Request
+
+```bash
+curl -X POST "https://studio.learningequality.org/api/channeluser/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "changes": [
+      {
+        "type": "CREATED",
+        "table": "editor_m2m",
+        "key": ["user123-4567-8901-abcd", "abc123"],
+        "user_id": "user123-4567-8901-abcd",
+        "channel_id": "abc123"
+      }
+    ]
+  }'
+```
+
+## Add Channel Viewer
+
+Add a user as a viewer to a channel using the sync API.
+
+```http
+POST /api/channeluser/
+```
+
+### Request Body
+
+Use the sync API format to add viewers:
+
+```json
+{
+  "changes": [
+    {
+      "type": "CREATED",
+      "table": "viewer_m2m",
+      "key": ["user_id", "channel_id"],
+      "user_id": "user456-7890-1234-efgh",
+      "channel_id": "abc123"
+    }
+  ]
+}
+```
+
+### Example Request
+
+```bash
+curl -X POST "https://studio.learningequality.org/api/channeluser/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "changes": [
+      {
+        "type": "CREATED",
+        "table": "viewer_m2m",
+        "key": ["user456-7890-1234-efgh", "abc123"],
+        "user_id": "user456-7890-1234-efgh",
+        "channel_id": "abc123"
+      }
+    ]
+  }'
+```
+
+## Remove Channel User
+
+Remove a user's access to a channel using the sync API.
+
+```http
+DELETE /api/channeluser/
+```
+
+### Request Body
+
+Use the sync API format to remove access:
+
+```json
+{
+  "changes": [
+    {
+      "type": "DELETED",
+      "table": "editor_m2m",
+      "key": ["user_id", "channel_id"],
+      "user_id": "user123-4567-8901-abcd",
+      "channel_id": "abc123"
+    }
+  ]
+}
+```
+
+### Example Request (Remove Editor)
+
+```bash
+curl -X DELETE "https://studio.learningequality.org/api/channeluser/" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "changes": [
+      {
+        "type": "DELETED",
+        "table": "editor_m2m",
+        "key": ["user123-4567-8901-abcd", "abc123"],
+        "user_id": "user123-4567-8901-abcd",
+        "channel_id": "abc123"
+      }
+    ]
+  }'
+```
+
+## Remove Self from Channel
+
+Allow a user to remove themselves from a channel's viewer list.
+
+```http
+DELETE /api/channeluser/{user_id}/remove_self/?channel_id={channel_id}
+```
+
+### Path Parameters
+
+<ParamField path="user_id" type="string" required>
+  ID of the user to remove
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="channel_id" type="string" required>
+  ID of the channel to remove the user from
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://studio.learningequality.org/api/channeluser/user123-4567-8901-abcd/remove_self/?channel_id=abc123" \
+  -H "Authorization: Token YOUR_AUTH_TOKEN"
+```
+
+### Example Response
+
+Returns HTTP 204 No Content on success.
+
+### Permissions
+
+- User can remove themselves from any channel they have viewer access to
+- Channel editors can remove other users from their channels
+
+## Role Types
+
+### Editor
+
+Users with editor access (`can_edit: true`) can:
+- Create, edit, and delete content nodes
+- Manage channel metadata and settings
+- Invite other users to the channel
+- Publish the channel
+- Remove other editors and viewers
+
+### Viewer
+
+Users with viewer access (`can_view: true`) can:
+- Browse and view channel content
+- View channel metadata
+- Cannot make any modifications
+- Cannot invite other users
+- Can remove themselves from the channel
+
+## Permissions
+
+Channel User management requires:
+- **Authentication**: User must be logged in
+- **Channel Edit Access**: User must have edit permissions for the channel
+- **Scope**: Users can only manage permissions for channels they can edit
+
+### Permission Checks
+
+- When listing users, the API verifies that the requester has edit access to the specified channel
+- When adding/removing users, the API verifies that the requester has edit access to all affected channels
+- Users without proper permissions receive an empty result set
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  Missing required `channel_id` parameter, or user is not a viewer of the channel when attempting self-removal
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Missing or invalid authentication token
+</ResponseField>
+
+<ResponseField name="403 Forbidden">
+  User does not have edit permissions for the channel or attempting to remove a user without proper permissions
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Channel or user not found
+</ResponseField>
+
+## Change Tables
+
+When using the sync API to manage channel users, use these table identifiers:
+
+<ResponseField name="editor_m2m">
+  Manages the many-to-many relationship between channels and editor users
+</ResponseField>
+
+<ResponseField name="viewer_m2m">
+  Manages the many-to-many relationship between channels and viewer users
+</ResponseField>

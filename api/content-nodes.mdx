@@ -1,0 +1,543 @@
+---
+title: "Content Nodes"
+description: "Manage content nodes and the content tree structure"
+---
+
+The Content Nodes API allows you to manage individual content items (resources and topics) and organize them in a hierarchical tree structure.
+
+## Endpoints
+
+### List Content Nodes
+
+<CodeGroup>
+```bash GET /api/contentnode
+curl -H "Authorization: Token YOUR_TOKEN" \
+  "https://studio.learningequality.org/api/contentnode?parent={parent_id}"
+```
+</CodeGroup>
+
+Retrieve content nodes. Use filters to query specific nodes.
+
+<ParamField query="parent" type="string">
+  Filter by parent node ID
+</ParamField>
+
+<ParamField query="parent__in" type="string">
+  Filter by multiple parent IDs (comma-separated)
+</ParamField>
+
+<ParamField query="id__in" type="string">
+  Filter by multiple node IDs (comma-separated)
+</ParamField>
+
+<ParamField query="kind" type="string">
+  Filter by content kind (e.g., "video", "document", "exercise", "topic")
+</ParamField>
+
+<ParamField query="root_id" type="string">
+  Filter by channel root ID
+</ParamField>
+
+<ParamField query="ancestors_of" type="string">
+  Get all ancestors of a specific node
+</ParamField>
+
+<ParamField query="complete" type="boolean">
+  Filter by completion status
+</ParamField>
+
+<ParamField query="max_results" type="integer">
+  Maximum number of results (max 100)
+</ParamField>
+
+<ParamField query="ordering" type="string">
+  Order results by field (default: "lft"). Prefix with "-" for descending order.
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "results": [
+    {
+      "id": "node-id-123",
+      "content_id": "content-id-456",
+      "node_id": "node-id-789",
+      "title": "Introduction to Algebra",
+      "description": "Basic algebraic concepts",
+      "kind": "video",
+      "language": "en",
+      "license": 1,
+      "author": "Jane Doe",
+      "provider": "Khan Academy",
+      "parent_id": "parent-node-id",
+      "channel_id": "channel-id-abc",
+      "complete": true,
+      "published": true,
+      "modified": "2024-01-15T10:30:00Z",
+      "thumbnail_src": "https://storage.example.com/thumb.jpg",
+      "has_children": false,
+      "resource_count": 1,
+      "total_count": 1
+    }
+  ],
+  "more": null
+}
+```
+</ResponseExample>
+
+### Create Content Node
+
+<CodeGroup>
+```bash POST /api/contentnode
+curl -X POST \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parent": "parent-node-id",
+    "title": "New Video",
+    "kind": "video",
+    "license": 1
+  }' \
+  https://studio.learningequality.org/api/contentnode
+```
+</CodeGroup>
+
+Create a new content node.
+
+<ParamField body="parent" type="string" required>
+  Parent node ID (required for creation)
+</ParamField>
+
+<ParamField body="title" type="string">
+  Node title (max 200 characters)
+</ParamField>
+
+<ParamField body="description" type="string">
+  Node description
+</ParamField>
+
+<ParamField body="kind" type="string" required>
+  Content kind ID (e.g., "video", "document", "exercise", "topic", "audio", "html5")
+</ParamField>
+
+<ParamField body="language" type="string">
+  Language code
+</ParamField>
+
+<ParamField body="license" type="integer">
+  License ID
+</ParamField>
+
+<ParamField body="license_description" type="string">
+  Additional license details
+</ParamField>
+
+<ParamField body="copyright_holder" type="string">
+  Copyright holder name
+</ParamField>
+
+<ParamField body="author" type="string">
+  Content author
+</ParamField>
+
+<ParamField body="provider" type="string">
+  Content provider organization
+</ParamField>
+
+<ParamField body="aggregator" type="string">
+  Content aggregator organization
+</ParamField>
+
+<ParamField body="role_visibility" type="string">
+  Role visibility setting ("learner" or "coach")
+</ParamField>
+
+<ParamField body="thumbnail_encoding" type="object">
+  Thumbnail encoding data
+</ParamField>
+
+<ParamField body="extra_fields" type="object">
+  Additional content-specific fields
+  <Expandable title="properties">
+    <ResponseField name="randomize" type="boolean">
+      Whether to randomize questions (required for exercises)
+    </ResponseField>
+    <ResponseField name="suggested_duration_type" type="string">
+      Duration type: "time" or "approx_time"
+    </ResponseField>
+    <ResponseField name="options" type="object">
+      Content-specific options
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="suggested_duration" type="integer">
+  Suggested duration in seconds
+</ParamField>
+
+<ParamField body="tags" type="object">
+  Tags as key-value pairs where keys are tag names and values are booleans
+</ParamField>
+
+<ParamField body="grade_levels" type="object">
+  Grade levels as key-value pairs
+</ParamField>
+
+<ParamField body="resource_types" type="object">
+  Resource types as key-value pairs
+</ParamField>
+
+<ParamField body="learning_activities" type="object">
+  Learning activities as key-value pairs
+</ParamField>
+
+<ParamField body="accessibility_labels" type="object">
+  Accessibility labels as key-value pairs
+</ParamField>
+
+<ParamField body="categories" type="object">
+  Subject categories as key-value pairs
+</ParamField>
+
+<ParamField body="learner_needs" type="object">
+  Learner needs as key-value pairs
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "id": "new-node-id-123",
+  "content_id": "content-id-456",
+  "node_id": "node-id-789",
+  "title": "New Video",
+  "kind": "video",
+  "parent_id": "parent-node-id",
+  "complete": false,
+  "published": false
+}
+```
+</ResponseExample>
+
+### Update Content Node
+
+<CodeGroup>
+```bash PATCH /api/contentnode/{id}
+curl -X PATCH \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated Title",
+    "description": "Updated description"
+  }' \
+  https://studio.learningequality.org/api/contentnode/{id}
+```
+</CodeGroup>
+
+Update an existing content node.
+
+<ParamField path="id" type="string" required>
+  Content node UUID
+</ParamField>
+
+<Note>
+The `parent` field cannot be changed through update - use the move operation instead. The `kind` field cannot be changed after creation.
+</Note>
+
+### Get Node Prerequisites
+
+<CodeGroup>
+```bash GET /api/contentnode/{id}/requisites
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/contentnode/{id}/requisites
+```
+</CodeGroup>
+
+Get all prerequisite relationships for nodes in the same channel.
+
+<ParamField path="id" type="string" required>
+  Content node UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+[
+  {
+    "target_node": "node-id-123",
+    "prerequisite": "prerequisite-node-id-456"
+  }
+]
+```
+</ResponseExample>
+
+### Get Node Size
+
+<CodeGroup>
+```bash GET /api/contentnode/{id}/size
+curl -H "Authorization: Token YOUR_TOKEN" \
+  https://studio.learningequality.org/api/contentnode/{id}/size
+```
+</CodeGroup>
+
+Calculate the total size of a node and its descendants. Only works on root nodes.
+
+<ParamField path="id" type="string" required>
+  Root content node UUID
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "size": 5242880000,
+  "stale": false
+}
+```
+</ResponseExample>
+
+## Tree Operations
+
+### Move Node
+
+Move a content node to a new position in the tree.
+
+<CodeGroup>
+```json Move Request (via sync/changes)
+{
+  "type": "MOVED",
+  "table": "contentnode",
+  "key": "node-id-to-move",
+  "target": "target-parent-id",
+  "position": "last-child"
+}
+```
+</CodeGroup>
+
+<ParamField body="key" type="string" required>
+  ID of the node to move
+</ParamField>
+
+<ParamField body="target" type="string" required>
+  ID of the target node
+</ParamField>
+
+<ParamField body="position" type="string">
+  Position relative to target: "first-child", "last-child", "left", or "right" (default: "last-child")
+</ParamField>
+
+### Copy Node
+
+Copy a content node and optionally its descendants to a new location.
+
+<CodeGroup>
+```json Copy Request (via sync/changes)
+{
+  "type": "COPIED",
+  "table": "contentnode",
+  "key": "new-node-id",
+  "from_key": "source-node-id",
+  "target": "target-parent-id",
+  "position": "last-child",
+  "mods": {
+    "title": "Copy of Original"
+  },
+  "excluded_descendants": []
+}
+```
+</CodeGroup>
+
+<ParamField body="key" type="string" required>
+  New ID for the copied node
+</ParamField>
+
+<ParamField body="from_key" type="string" required>
+  ID of the source node to copy
+</ParamField>
+
+<ParamField body="target" type="string" required>
+  ID of the target parent node
+</ParamField>
+
+<ParamField body="position" type="string">
+  Position relative to target
+</ParamField>
+
+<ParamField body="mods" type="object">
+  Modifications to apply to the copied node
+</ParamField>
+
+<ParamField body="excluded_descendants" type="array">
+  Array of descendant node IDs to exclude from the copy
+</ParamField>
+
+## Content Node Fields
+
+<ResponseField name="id" type="string">
+  Unique node identifier (UUID)
+</ResponseField>
+
+<ResponseField name="content_id" type="string">
+  Content identifier for tracking user interactions (UUID)
+</ResponseField>
+
+<ResponseField name="node_id" type="string">
+  Node identifier used in Kolibri (UUID)
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Node title (max 200 characters)
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Node description
+</ResponseField>
+
+<ResponseField name="kind" type="string">
+  Content kind (video, document, exercise, topic, audio, html5, etc.)
+</ResponseField>
+
+<ResponseField name="language" type="string">
+  Language code
+</ResponseField>
+
+<ResponseField name="license" type="integer">
+  License ID
+</ResponseField>
+
+<ResponseField name="license_description" type="string">
+  License description
+</ResponseField>
+
+<ResponseField name="copyright_holder" type="string">
+  Copyright holder
+</ResponseField>
+
+<ResponseField name="author" type="string">
+  Content author
+</ResponseField>
+
+<ResponseField name="provider" type="string">
+  Content provider
+</ResponseField>
+
+<ResponseField name="aggregator" type="string">
+  Content aggregator
+</ResponseField>
+
+<ResponseField name="parent_id" type="string">
+  Parent node ID
+</ResponseField>
+
+<ResponseField name="channel_id" type="string">
+  Channel ID this node belongs to
+</ResponseField>
+
+<ResponseField name="root_id" type="string">
+  Root node ID of the tree
+</ResponseField>
+
+<ResponseField name="original_channel_id" type="string">
+  Original channel this content was copied from
+</ResponseField>
+
+<ResponseField name="original_channel_name" type="string">
+  Name of the original channel
+</ResponseField>
+
+<ResponseField name="original_source_node_id" type="string">
+  Original node ID from source
+</ResponseField>
+
+<ResponseField name="complete" type="boolean">
+  Whether the node is complete and ready for publishing
+</ResponseField>
+
+<ResponseField name="changed" type="boolean">
+  Whether the node has been changed
+</ResponseField>
+
+<ResponseField name="published" type="boolean">
+  Whether the node has been published
+</ResponseField>
+
+<ResponseField name="modified" type="string">
+  Last modification timestamp (ISO 8601)
+</ResponseField>
+
+<ResponseField name="thumbnail_src" type="string">
+  Thumbnail image URL or base64 data
+</ResponseField>
+
+<ResponseField name="thumbnail_encoding" type="object">
+  Thumbnail encoding information
+</ResponseField>
+
+<ResponseField name="role_visibility" type="string">
+  Visibility setting (learner/coach)
+</ResponseField>
+
+<ResponseField name="has_children" type="boolean">
+  Whether this node has child nodes
+</ResponseField>
+
+<ResponseField name="total_count" type="integer">
+  Total number of descendants
+</ResponseField>
+
+<ResponseField name="resource_count" type="integer">
+  Number of non-topic descendants
+</ResponseField>
+
+<ResponseField name="coach_count" type="integer">
+  Number of coach-only resources
+</ResponseField>
+
+<ResponseField name="assessment_item_count" type="integer">
+  Number of assessment items (for exercises)
+</ResponseField>
+
+<ResponseField name="error_count" type="integer">
+  Number of incomplete descendants
+</ResponseField>
+
+<ResponseField name="has_updated_descendants" type="boolean">
+  Whether any published descendants have been updated
+</ResponseField>
+
+<ResponseField name="has_new_descendants" type="boolean">
+  Whether there are new unpublished descendants
+</ResponseField>
+
+<ResponseField name="tags" type="array">
+  Array of tag names
+</ResponseField>
+
+<ResponseField name="extra_fields" type="object">
+  Additional content-specific fields
+</ResponseField>
+
+<ResponseField name="suggested_duration" type="integer">
+  Suggested duration in seconds
+</ResponseField>
+
+<ResponseField name="grade_levels" type="object">
+  Grade level labels
+</ResponseField>
+
+<ResponseField name="resource_types" type="object">
+  Resource type labels
+</ResponseField>
+
+<ResponseField name="learning_activities" type="object">
+  Learning activity labels
+</ResponseField>
+
+<ResponseField name="accessibility_labels" type="object">
+  Accessibility labels
+</ResponseField>
+
+<ResponseField name="categories" type="object">
+  Subject category labels
+</ResponseField>
+
+<ResponseField name="learner_needs" type="object">
+  Learner needs labels
+</ResponseField>

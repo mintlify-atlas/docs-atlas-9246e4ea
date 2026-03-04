@@ -1,122 +1,118 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Kolibri Studio",
+  "theme": "maple",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#4368f6",
+    "light": "#4368f6",
+    "dark": "#4368f6"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/f5fa024a-dac7-40ed-b76e-ab254899af02.png",
+  "logo": {
+    "light": "https://media.brand.dev/f5fa024a-dac7-40ed-b76e-ab254899af02.png",
+    "dark": "https://media.brand.dev/f5fa024a-dac7-40ed-b76e-ab254899af02.png"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/learningequality/studio"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/learningequality/studio"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/channels",
+              "concepts/content-nodes",
+              "concepts/content-types",
+              "concepts/licensing"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "User Guide",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guide/creating-channels",
+              "guide/organizing-content",
+              "guide/publishing",
+              "guide/collaboration"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Developer Guide",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "development/setup",
+              "development/architecture",
+              "development/frontend",
+              "development/backend",
+              "development/testing"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/ricecooker",
+              "integrations/kolibri"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "api/overview",
+              "api/authentication"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Content API",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/channels",
+              "api/content-nodes",
+              "api/files",
+              "api/assessment-items"
+            ]
+          },
+          {
+            "group": "User & Permissions",
+            "pages": [
+              "api/users",
+              "api/invitations",
+              "api/channel-users"
+            ]
+          },
+          {
+            "group": "Public API",
+            "pages": [
+              "api/public-channels"
+            ]
+          },
+          {
+            "group": "Internal API",
+            "pages": [
+              "api/internal-endpoints"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

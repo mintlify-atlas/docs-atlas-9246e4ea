@@ -1,0 +1,366 @@
+---
+title: Ricecooker Integration
+description: Use the ricecooker Python SDK to programmatically upload content to Kolibri Studio
+---
+
+## Overview
+
+Ricecooker is a Python framework for creating content import scripts that can upload educational materials to Kolibri Studio programmatically. It enables automated content channel creation without using the web interface.
+
+<Info>
+Ricecooker is ideal for importing content at scale, automating content updates, or integrating content from external sources.
+</Info>
+
+## Installation
+
+Install ricecooker using pip:
+
+```bash
+pip install ricecooker
+```
+
+Minimum supported version: **0.6.21**
+
+Recommended version: **0.7.3+**
+
+## Authentication
+
+Ricecooker uses token-based authentication. Generate an API token from your Kolibri Studio account settings.
+
+### Authentication Endpoint
+
+```python
+POST /api/internal/authenticate_user_internal
+Headers:
+  Authorization: Token {your_token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "username": "your_username",
+  "user_id": 123,
+  "first_name": "First",
+  "last_name": "Last",
+  "is_admin": false
+}
+```
+
+## Version Checking
+
+Ricecooker automatically checks version compatibility with Studio:
+
+```python
+POST /api/internal/check_version
+Headers:
+  Authorization: Token {your_token}
+Body:
+{
+  "version": "0.7.3"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": 0,
+  "message": "Ricecooker v0.7.3 is up-to-date."
+}
+```
+
+**Status Codes:**
+- `0`: Version is up-to-date
+- `1`: Soft warning - upgrade recommended
+- `2`: Hard warning - upgrade strongly recommended
+- `3`: Error - version incompatible, must upgrade
+
+## Core Workflow
+
+Ricecooker follows a three-step process:
+
+### 1. Create Channel
+
+Create a new channel or update an existing one:
+
+```python
+POST /api/internal/create_channel
+Headers:
+  Authorization: Token {your_token}
+Body:
+{
+  "channel_data": {
+    "name": "My Channel",
+    "description": "Channel description",
+    "thumbnail": "path/to/thumbnail.png",
+    "language": "en"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "root": "abc123def456",
+  "channel_id": "a1b2c3d4e5f6g7h8i9j0"
+}
+```
+
+The `root` is the chef tree root node ID where content will be added.
+
+### 2. Add Content Nodes
+
+Add topics, videos, exercises, and other content:
+
+```python
+POST /api/internal/add_nodes
+Headers:
+  Authorization: Token {your_token}
+Body:
+{
+  "root_id": "abc123def456",
+  "content_data": [
+    {
+      "kind": "topic",
+      "title": "Introduction",
+      "description": "Getting started",
+      "node_id": "topic-001"
+    },
+    {
+      "kind": "video",
+      "title": "Lesson 1",
+      "description": "First lesson",
+      "license": "CC BY",
+      "files": [
+        {
+          "file_type": "video/mp4",
+          "path": "lesson1.mp4"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "root_ids": {
+    "topic-001": "node_pk_123",
+    "video-001": "node_pk_124"
+  }
+}
+```
+
+The response maps your node IDs to Studio's internal node primary keys.
+
+### 3. Finish Channel
+
+Commit the chef tree to staging:
+
+```python
+POST /api/internal/finish_channel
+Headers:
+  Authorization: Token {your_token}
+Body:
+{
+  "channel_id": "a1b2c3d4e5f6g7h8i9j0",
+  "stage": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "new_channel": "a1b2c3d4e5f6g7h8i9j0",
+  "diff_task_id": "task-uuid"
+}
+```
+
+Setting `stage: true` moves content to the staging tree for review. Set to `false` to move directly to the main tree.
+
+## File Management
+
+### Check File Differences
+
+Determine which files need to be uploaded:
+
+```python
+POST /api/internal/file_diff
+Headers:
+  Authorization: Token {your_token}
+Body:
+["checksum1.mp4", "checksum2.pdf", "checksum3.jpg"]
+```
+
+**Response:**
+```json
+["checksum1.mp4"]
+```
+
+Only files not already in storage are returned.
+
+### Upload Files
+
+<Warning>
+This endpoint is deprecated in ricecooker 0.7+. Files are now uploaded directly to cloud storage.
+</Warning>
+
+```python
+POST /api/internal/file_upload
+Headers:
+  Authorization: Token {your_token}
+Content-Type: multipart/form-data
+Body:
+  file: <file data>
+```
+
+## Publishing Channels
+
+Publish your channel to make it available to Kolibri:
+
+```python
+POST /api/internal/publish_channel
+Headers:
+  Authorization: Token {your_token}
+Body:
+{
+  "channel_id": "a1b2c3d4e5f6g7h8i9j0",
+  "version_notes": "Initial release"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "channel": "a1b2c3d4e5f6g7h8i9j0"
+}
+```
+
+## Checking Channel Status
+
+Check the status of multiple channels:
+
+```python
+POST /api/internal/get_channel_status_bulk
+Body:
+{
+  "channel_ids": ["channel-id-1", "channel-id-2"]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "statuses": {
+    "channel-id-1": "staged",
+    "channel-id-2": "published"
+  }
+}
+```
+
+## Retrieving Tree Data
+
+Get the complete tree structure (may timeout for large channels):
+
+```python
+POST /api/internal/get_tree_data
+Body:
+{
+  "channel_id": "a1b2c3d4e5f6g7h8i9j0",
+  "tree": "main"
+}
+```
+
+**Tree options:** `main`, `chef`, `staging`, `previous`
+
+**Response:**
+```json
+{
+  "success": true,
+  "tree": [
+    {
+      "kind": "topic",
+      "title": "Topic",
+      "children": [
+        {
+          "kind": "exercise",
+          "title": "Exercise",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "html5",
+      "title": "HTML Title",
+      "file_size": 145990
+    }
+  ]
+}
+```
+
+### Get Node Tree Data (Paginated)
+
+For large channels, use the paginated endpoint:
+
+```python
+POST /api/internal/get_node_tree_data
+Body:
+{
+  "channel_id": "a1b2c3d4e5f6g7h8i9j0",
+  "tree": "main",
+  "node_id": "node-uuid"
+}
+```
+
+Returns one level of children for the specified node.
+
+## Editor Permissions
+
+Check if a user can edit a channel:
+
+```python
+POST /api/internal/check_user_is_editor
+Headers:
+  Authorization: Token {your_token}
+Body:
+{
+  "channel_id": "a1b2c3d4e5f6g7h8i9j0"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+Returns `403 Forbidden` if user is not authorized.
+
+## Resources
+
+<Card title="Ricecooker GitHub" icon="github" href="https://github.com/learningequality/ricecooker">
+  View the ricecooker source code, examples, and documentation
+</Card>
+
+<Card title="Ricecooker Documentation" icon="book" href="https://ricecooker.readthedocs.io/">
+  Complete ricecooker framework documentation
+</Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Kolibri Integration" icon="plug" href="/integrations/kolibri">
+    Learn how Kolibri imports published channels
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore the complete API documentation
+  </Card>
+</CardGroup>

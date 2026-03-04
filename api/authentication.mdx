@@ -1,0 +1,299 @@
+---
+title: 'Authentication'
+description: 'Authenticate API requests with token-based authentication'
+---
+
+## Overview
+
+Kolibri Studio API supports two authentication methods:
+
+1. **Token Authentication** - For programmatic API access (recommended)
+2. **Session Authentication** - For browser-based requests (web interface)
+
+This guide focuses on token authentication for API clients.
+
+## Token Authentication
+
+Studio uses Django REST Framework's token authentication. Each user has a unique, permanent token associated with their account.
+
+### How It Works
+
+1. User creates a Studio account and logs in
+2. System generates a unique authentication token for the user
+3. Client includes the token in the `Authorization` header for API requests
+4. Server validates the token and processes the request
+
+## Getting Your API Token
+
+### Method 1: Through the Web Interface
+
+1. Log in to Kolibri Studio at [studio.learningequality.org](https://studio.learningequality.org)
+2. Navigate to your account settings
+3. Look for the API token section
+4. Copy your token (keep it secure!)
+
+### Method 2: Programmatically
+
+If you have session authentication (logged in through browser), you can retrieve your token via the API:
+
+```bash
+curl -X GET https://studio.learningequality.org/api/deferred_user_api_token \
+  -H "Cookie: sessionid=YOUR_SESSION_ID"
+```
+
+Response:
+```json
+{
+  "api_token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+}
+```
+
+### Token Generation
+
+Tokens are automatically generated when:
+- A user account is created
+- The `User.get_token()` method is called
+
+The token is created using Django's `rest_framework.authtoken.models.Token` model and persists in the database.
+
+## Using Tokens in Requests
+
+### Header Format
+
+Include the token in the `Authorization` header with the `Token` prefix:
+
+```
+Authorization: Token YOUR_API_TOKEN_HERE
+```
+
+### Example: cURL
+
+```bash
+curl -X GET https://studio.learningequality.org/api/channel/ \
+  -H "Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+```
+
+### Example: Python with requests
+
+```python
+import requests
+
+API_TOKEN = "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+BASE_URL = "https://studio.learningequality.org"
+
+headers = {
+    "Authorization": f"Token {API_TOKEN}"
+}
+
+response = requests.get(f"{BASE_URL}/api/channel/", headers=headers)
+print(response.json())
+```
+
+### Example: JavaScript (Node.js)
+
+```javascript
+const fetch = require('node-fetch');
+
+const API_TOKEN = '9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b';
+const BASE_URL = 'https://studio.learningequality.org';
+
+fetch(`${BASE_URL}/api/channel/`, {
+  headers: {
+    'Authorization': `Token ${API_TOKEN}`
+  }
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+## Real Example: Check Editor Permissions
+
+This endpoint verifies if a user has edit permissions for a specific channel:
+
+```bash
+curl -X POST https://studio.learningequality.org/api/internal/check_user_is_editor \
+  -H "Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b" \
+  -H "Content-Type: application/json" \
+  -d '{"channel_id": "abc123def456"}'
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "detail": "You do not have permission to perform this action."
+}
+```
+
+## Real Example: Authenticate Token
+
+Validate a token and get user information:
+
+```bash
+curl -X POST https://studio.learningequality.org/api/internal/authenticate_user_internal \
+  -H "Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "username": "john.doe@example.com"
+}
+```
+
+**Error Response (400):**
+```json
+{
+  "detail": "Invalid token."
+}
+```
+
+## Real Example: Upload a File
+
+Upload content files to Studio:
+
+```bash
+curl -X POST https://studio.learningequality.org/api/internal/file_upload \
+  -H "Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b" \
+  -F "file=@/path/to/video.mp4"
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true
+}
+```
+
+## Token Security Best Practices
+
+<Warning>
+  Treat your API token like a password. Anyone with your token can access your Studio account and modify your content.
+</Warning>
+
+### Do's
+
+- Store tokens in environment variables, not in code
+- Use HTTPS for all API requests
+- Rotate tokens if compromised
+- Use separate accounts for different automation tasks
+- Keep tokens out of version control
+
+### Don'ts
+
+- Don't commit tokens to Git repositories
+- Don't share tokens in public forums or documentation
+- Don't log tokens in application logs
+- Don't embed tokens in client-side code
+
+### Environment Variables Example
+
+```bash
+# .env file
+STUDIO_API_TOKEN=9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
+STUDIO_BASE_URL=https://studio.learningequality.org
+```
+
+```python
+import os
+from dotenv import load_dotenv
+import requests
+
+load_dotenv()
+
+API_TOKEN = os.getenv('STUDIO_API_TOKEN')
+BASE_URL = os.getenv('STUDIO_BASE_URL')
+
+headers = {'Authorization': f'Token {API_TOKEN}'}
+response = requests.get(f'{BASE_URL}/api/channel/', headers=headers)
+```
+
+## Token Management
+
+### Token Persistence
+
+Tokens are permanent and stored in the database. They remain valid until:
+- The user account is deleted
+- The token is manually regenerated (requires database access)
+
+### Multiple Tokens
+
+Currently, each user has one token. If you need to separate access for different applications, consider:
+- Creating separate service accounts
+- Using different user accounts for different automation tasks
+
+## Authentication Errors
+
+### Missing Token
+
+```bash
+HTTP 401 Unauthorized
+{
+  "detail": "Authentication credentials were not provided."
+}
+```
+
+**Solution:** Add the `Authorization` header with your token.
+
+### Invalid Token Format
+
+```bash
+HTTP 401 Unauthorized
+{
+  "detail": "Invalid token header. No credentials provided."
+}
+```
+
+**Solution:** Ensure the header format is `Authorization: Token YOUR_TOKEN`.
+
+### Invalid Token
+
+```bash
+HTTP 401 Unauthorized
+{
+  "detail": "Invalid token."
+}
+```
+
+**Solution:** Verify your token is correct. You may need to regenerate it.
+
+## Session Authentication
+
+For browser-based requests, Studio supports session authentication using cookies. This is automatically handled when you log in through the web interface.
+
+API endpoints support both authentication methods:
+
+```python
+# From viewsets/base.py
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.SessionAuthentication",
+    "rest_framework.authentication.TokenAuthentication",
+)
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Overview" icon="book" href="/api/overview">
+    Learn about available endpoints and response formats
+  </Card>
+  
+  <Card title="Channels API" icon="folder" href="/api-reference/channels/list">
+    Create and manage content channels
+  </Card>
+  
+  <Card title="Content Nodes API" icon="sitemap" href="/api-reference/content/list">
+    Work with content node trees
+  </Card>
+  
+  <Card title="Ricecooker Integration" icon="python" href="/ricecooker">
+    Use ricecooker for automated content integration
+  </Card>
+</CardGroup>

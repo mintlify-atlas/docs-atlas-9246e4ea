@@ -1,0 +1,214 @@
+---
+title: 'Channels'
+description: 'Understanding channels as the fundamental container for organizing and distributing educational content'
+icon: 'broadcast-tower'
+---
+
+Channels are the fundamental organizational unit in Kolibri Studio. Each channel represents a curated collection of educational content that can be published and imported into Kolibri for offline distribution to learners.
+
+## What is a channel?
+
+A channel is a standalone educational content collection with:
+
+- **Hierarchical content structure** - Content organized in a tree of topics and resources
+- **Metadata and branding** - Name, description, thumbnail, and language settings
+- **Version control** - Track changes and publish new versions
+- **Access control** - Manage editors and viewers with role-based permissions
+- **Publishing workflow** - Separate staging and published versions
+
+## Channel model fields
+
+The `Channel` model defined in `/models.py:1004` contains the following key fields:
+
+### Basic metadata
+
+```python
+id = UUIDField(primary_key=True, default=uuid.uuid4)
+name = models.CharField(max_length=200, blank=True)
+description = models.CharField(max_length=400, blank=True)
+tagline = models.CharField(max_length=150, blank=True, null=True)
+thumbnail = models.TextField(blank=True, null=True)
+thumbnail_encoding = JSONField(default=dict)
+language = models.ForeignKey("Language", ...)
+```
+
+### Content trees
+
+Channels maintain multiple content trees for different purposes:
+
+```python
+main_tree = models.ForeignKey("ContentNode", related_name="channel_main", ...)
+staging_tree = models.ForeignKey("ContentNode", related_name="channel_staging", ...)
+trash_tree = models.ForeignKey("ContentNode", related_name="channel_trash", ...)
+chef_tree = models.ForeignKey("ContentNode", related_name="channel_chef", ...)
+previous_tree = models.ForeignKey("ContentNode", related_name="channel_previous", ...)
+clipboard_tree = models.ForeignKey("ContentNode", related_name="channel_clipboard", ...)
+```
+
+<Info>
+Each tree serves a specific purpose:
+- **main_tree** - The working version of your channel content
+- **staging_tree** - Content prepared for publishing
+- **trash_tree** - Deleted content (recoverable)
+- **previous_tree** - Previous published version
+- **chef_tree** - Content imported via ricecooker
+- **clipboard_tree** - Temporary storage for copy/paste operations
+</Info>
+
+### Permissions
+
+```python
+editors = models.ManyToManyField(settings.AUTH_USER_MODEL, 
+    related_name="editable_channels")
+viewers = models.ManyToManyField(settings.AUTH_USER_MODEL, 
+    related_name="view_only_channels")
+```
+
+### Publishing and versioning
+
+```python
+version = models.IntegerField(default=0)
+last_published = models.DateTimeField(blank=True, null=True)
+public = models.BooleanField(default=False, db_index=True)
+deleted = models.BooleanField(default=False, db_index=True)
+```
+
+### Published metadata
+
+These fields are calculated when a channel is published:
+
+```python
+published_data = JSONField(default=dict)
+total_resource_count = models.IntegerField(default=0)
+published_kind_count = models.TextField(blank=True, null=True)
+published_size = models.FloatField(default=0)
+included_languages = models.ManyToManyField("Language", ...)
+```
+
+## Channel lifecycle
+
+### Creating a channel
+
+When a channel is created (`models.py:1235`):
+
+1. A unique UUID is generated as the channel ID
+2. A `main_tree` root node is created automatically
+3. A `trash_tree` is created for deleted content
+4. Content defaults are initialized from user preferences
+
+```python
+def on_create(self):
+    if not self.main_tree:
+        self.main_tree = ContentNode.objects.create(
+            title=self.name,
+            kind_id=content_kinds.TOPIC,
+            content_id=self.id,
+            node_id=self.id,
+            original_channel_id=self.id,
+            source_channel_id=self.id,
+            changed=True,
+            complete=True,
+        )
+```
+
+### Staging vs. published
+
+<Steps>
+  <Step title="Edit in main_tree">
+    Content creators work in the `main_tree`, making changes without affecting the published version.
+  </Step>
+  <Step title="Prepare for publishing">
+    Content is copied to `staging_tree` when you initiate publishing. This allows validation before making content live.
+  </Step>
+  <Step title="Publish">
+    The staging tree is exported to a SQLite database and made available for Kolibri instances to import.
+  </Step>
+  <Step title="Archive previous version">
+    The previous published tree is saved to `previous_tree` for rollback capability.
+  </Step>
+</Steps>
+
+## Channel versioning
+
+Each time you publish a channel, the version number increments:
+
+```python
+version = models.IntegerField(default=0)
+last_published = models.DateTimeField(blank=True, null=True)
+```
+
+The `ChannelVersion` model (`models.py:1548`) tracks version-specific metadata:
+
+```python
+class ChannelVersion(models.Model):
+    channel = models.ForeignKey(Channel, related_name="channel_versions")
+    version = models.PositiveIntegerField(null=True, blank=True)
+    version_notes = models.TextField(null=True, blank=True)
+    date_published = models.DateTimeField(null=True, blank=True)
+    resource_count = models.PositiveIntegerField(null=True, blank=True)
+    kind_count = ArrayField(JSONField(), ...)
+    included_licenses = ArrayField(models.IntegerField(...))
+    included_categories = ArrayField(models.CharField(...))
+    included_languages = ArrayField(models.CharField(...))
+```
+
+## Secret tokens
+
+Channels use secret tokens for secure distribution:
+
+```python
+secret_tokens = models.ManyToManyField(SecretToken, related_name="channels")
+```
+
+Two types of tokens are created (`models.py:1394`):
+
+1. **Primary token** - A human-readable proquint string (e.g., "lusab-babad")
+2. **Channel ID token** - The channel UUID itself
+
+These tokens allow Kolibri instances to download channel databases securely.
+
+## Public vs. private channels
+
+```python
+public = models.BooleanField(default=False, db_index=True)
+```
+
+- **Private channels** - Only visible to editors and viewers
+- **Public channels** - Listed in the public library, discoverable by anyone
+
+<Warning>
+Channels in the Community Library cannot be marked public. They use a separate submission workflow.
+</Warning>
+
+## Channel storage
+
+Channels track storage usage for quota management:
+
+```python
+def get_resource_size(self):
+    tree_id = self.main_tree.tree_id
+    files = (
+        File.objects.filter(contentnode__tree_id=tree_id)
+        .values("checksum", "file_size")
+        .distinct()
+        .aggregate(resource_size=Sum("file_size"))
+    )
+    return files["resource_size"] or 0
+```
+
+## Related models
+
+- [Content nodes](/concepts/content-nodes) - The tree structure within channels
+- [Content types](/concepts/content-types) - Different kinds of resources
+- [Licensing](/concepts/licensing) - License requirements for channel content
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Content nodes" icon="sitemap" href="/concepts/content-nodes">
+    Learn about the MPTT tree structure for organizing content
+  </Card>
+  <Card title="Creating channels" icon="plus" href="/guide/creating-channels">
+    Step-by-step guide to creating your first channel
+  </Card>
+</CardGroup>

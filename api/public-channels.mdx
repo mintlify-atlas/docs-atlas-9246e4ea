@@ -1,0 +1,147 @@
+---
+title: Public Channels API
+description: Public API endpoints for discovering and accessing published channels
+---
+
+The Public Channels API allows Kolibri and other clients to discover and access published educational content channels from Kolibri Studio.
+
+## Endpoints
+
+### GET /api/public/v1/channels
+
+Returns a list of all public channels available on Kolibri Studio. This is the primary endpoint used by Kolibri installations to discover available content.
+
+**Request**
+
+```http
+GET /api/public/v1/channels
+```
+
+**Query Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `keyword` | string | Filter channels by keyword in name, description, or tags |
+| `language` | string | Filter channels by language ID |
+| `tokens` | string | Comma-separated list of access tokens for private channels |
+
+**Response**
+
+Returns a JSON array of channel objects:
+
+```json
+[
+  {
+    "id": "6199dde695db4ee4ab392222d5af1e5c",
+    "name": "Khan Academy (English)",
+    "description": "Khan Academy content in English",
+    "tagline": "Free online courses and lessons",
+    "version": 142,
+    "thumbnail": "https://studio.learningequality.org/content/storage/...",
+    "language": "en",
+    "author": "Khan Academy",
+    "public": true,
+    "total_resource_count": 15234,
+    "published_size": 5368709120,
+    "last_published": "2024-03-15T10:30:00Z",
+    "included_languages": ["en"]
+  }
+]
+```
+
+**Example**
+
+```bash
+curl https://studio.learningequality.org/api/public/v1/channels
+```
+
+### GET /api/public/v1/channels/lookup/{identifier}
+
+Looks up channels by identifier, which can be either a channel ID or an access token.
+
+**Request**
+
+```http
+GET /api/public/v1/channels/lookup/{identifier}
+```
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `identifier` | string | Channel ID (UUID) or access token |
+
+**Query Parameters**
+
+Same as `/api/public/v1/channels`:
+- `keyword`
+- `language`  
+- `tokens`
+
+**Response**
+
+Returns a JSON array of matching channel objects with the same structure as the channels list endpoint.
+
+**Example - Lookup by Channel ID**
+
+```bash
+curl https://studio.learningequality.org/api/public/v1/channels/lookup/6199dde695db4ee4ab392222d5af1e5c
+```
+
+**Example - Lookup by Token**
+
+```bash
+curl https://studio.learningequality.org/api/public/v1/channels/lookup/abc123token
+```
+
+**Error Responses**
+
+- `404 Not Found` - No channel matching the identifier was found
+
+### GET /api/public/channel/{channel_id}
+
+Returns basic information about a specific channel by its ID.
+
+**Request**
+
+```http
+GET /api/public/channel/{channel_id}
+```
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `channel_id` | string | Channel UUID |
+
+**Response**
+
+```json
+{
+  "name": "Khan Academy (English)",
+  "description": "Khan Academy content in English",
+  "version": 142
+}
+```
+
+**Example**
+
+```bash
+curl https://studio.learningequality.org/api/public/channel/6199dde695db4ee4ab392222d5af1e5c
+```
+
+## Usage in Kolibri
+
+Kolibri uses these endpoints to:
+
+1. **Discover available channels** - The `/api/public/v1/channels` endpoint is queried to show available content in the Kolibri channel import interface
+2. **Access token-protected channels** - Private channels can be accessed by providing tokens in the query parameters
+3. **Check channel metadata** - Channel information is retrieved to display details before importing
+
+## Authentication
+
+These endpoints are **publicly accessible** and do not require authentication. However, access to private channels requires valid access tokens passed in query parameters.
+
+## Caching
+
+Responses are cached for 5 minutes (300 seconds) to improve performance. The cache is invalidated when channel metadata is updated.

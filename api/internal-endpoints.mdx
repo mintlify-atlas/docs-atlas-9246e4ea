@@ -1,0 +1,383 @@
+---
+title: Internal API
+description: Internal API endpoints used by ricecooker for programmatic channel creation
+---
+
+The Internal API provides endpoints used by the [ricecooker](https://github.com/learningequality/ricecooker) library to programmatically create and manage content channels on Kolibri Studio.
+
+<Warning>
+These endpoints are designed for use by ricecooker and other automated content integration tools. They require authentication and should not be used directly unless you are building a content integration tool.
+</Warning>
+
+## Authentication
+
+All internal API endpoints require authentication using a user token:
+
+```http
+Authorization: Token {your-api-token}
+```
+
+You can generate an API token from your Kolibri Studio account settings.
+
+## Channel Creation Workflow
+
+The typical workflow for creating a channel with ricecooker:
+
+1. **Check ricecooker version** - `POST /api/internal/check_version`
+2. **Authenticate** - `POST /api/internal/authenticate_user_internal`
+3. **Check file differences** - `POST /api/internal/file_diff`
+4. **Upload files** - `POST /api/internal/file_upload` (for each file)
+5. **Create channel** - `POST /api/internal/create_channel`
+6. **Add content nodes** - `POST /api/internal/add_nodes` (recursively for tree structure)
+7. **Finish channel** - `POST /api/internal/finish_channel`
+8. **Publish channel** - `POST /api/internal/publish_channel`
+
+## Endpoints
+
+### POST /api/internal/authenticate_user_internal
+
+Verifies that the user token is valid and returns user information.
+
+**Request**
+
+```http
+POST /api/internal/authenticate_user_internal
+Authorization: Token {token}
+```
+
+**Response**
+
+```json
+{
+  "success": true,
+  "username": "johndoe",
+  "user_id": 123,
+  "first_name": "John",
+  "last_name": "Doe",
+  "is_admin": false
+}
+```
+
+### POST /api/internal/check_version
+
+Checks if the ricecooker version is compatible with Kolibri Studio.
+
+**Request**
+
+```http
+POST /api/internal/check_version
+Authorization: Token {token}
+Content-Type: application/json
+
+{
+  "version": "0.7.0"
+}
+```
+
+**Response**
+
+```json
+{
+  "success": true,
+  "status": 0,
+  "message": "Ricecooker v0.7.0 is up-to-date."
+}
+```
+
+**Status Codes**
+
+- `0` - Version OK
+- `1` - Soft warning (version works but update recommended)
+- `2` - Hard warning (version deprecated, update strongly recommended)
+- `3` - Error (version incompatible, must update)
+
+### POST /api/internal/file_diff
+
+Returns which files from a list are not yet uploaded to the server.
+
+**Request**
+
+```http
+POST /api/internal/file_diff
+Authorization: Token {token}
+Content-Type: application/json
+
+["abc123.mp4", "def456.png", "ghi789.pdf"]
+```
+
+**Response**
+
+Returns array of filenames not in storage:
+
+```json
+["abc123.mp4"]
+```
+
+### POST /api/internal/file_upload
+
+Uploads a file to Kolibri Studio storage.
+
+<Warning>
+This endpoint is deprecated for ricecooker 0.7+. Newer versions upload files directly to cloud storage.
+</Warning>
+
+**Request**
+
+```http
+POST /api/internal/file_upload
+Authorization: Token {token}
+Content-Type: multipart/form-data
+
+file: {FileObject}
+```
+
+The file must be named with the format `{checksum}.{extension}`.
+
+**Response**
+
+```json
+{
+  "success": true
+}
+```
+
+**Errors**
+
+- `400 Bad Request` - Invalid file upload request or checksum mismatch
+- `403 Forbidden` - Insufficient storage quota
+
+### POST /api/internal/create_channel
+
+Creates a new channel and returns the root node ID for building the content tree.
+
+**Request**
+
+```http
+POST /api/internal/create_channel
+Authorization: Token {token}
+Content-Type: application/json
+
+{
+  "channel_data": {
+    "id": "6199dde695db4ee4ab392222d5af1e5c",
+    "name": "My Educational Channel",
+    "description": "A channel for math content",
+    "thumbnail": "channel_thumb.png",
+    "language": "en",
+    "source_id": "my-channel",
+    "source_domain": "example.org",
+    "ricecooker_version": "0.7.0",
+    "tagline": "Learn mathematics"
+  }
+}
+```
+
+**Response**
+
+```json
+{
+  "success": true,
+  "root": 12345,
+  "channel_id": "6199dde695db4ee4ab392222d5af1e5c"
+}
+```
+
+The `root` value is the primary key of the chef tree root node, used for adding child nodes.
+
+### POST /api/internal/add_nodes
+
+Adds content nodes to the channel tree under a specified parent node.
+
+**Request**
+
+```http
+POST /api/internal/add_nodes
+Authorization: Token {token}
+Content-Type: application/json
+
+{
+  "root_id": 12345,
+  "content_data": [
+    {
+      "node_id": "abc-123",
+      "content_id": "content-abc-123",
+      "title": "Introduction to Algebra",
+      "description": "Learn the basics of algebra",
+      "kind": "video",
+      "license": "CC BY",
+      "copyright_holder": "Example.org",
+      "author": "Jane Teacher",
+      "language": "en",
+      "files": [
+        {
+          "filename": "video123.mp4",
+          "preset": "high_res_video",
+          "language": "en"
+        }
+      ],
+      "questions": []
+    }
+  ]
+}
+```
+
+**Response**
+
+```json
+{
+  "success": true,
+  "root_ids": {
+    "abc-123": 67890
+  }
+}
+```
+
+The `root_ids` maps node IDs to their database primary keys, which can be used as `root_id` for adding children.
+
+### POST /api/internal/finish_channel
+
+Moves the chef tree to the staging tree, making it ready for publishing.
+
+**Request**
+
+```http
+POST /api/internal/finish_channel
+Authorization: Token {token}
+Content-Type: application/json
+
+{
+  "channel_id": "6199dde695db4ee4ab392222d5af1e5c",
+  "stage": true
+}
+```
+
+**Request Body**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `channel_id` | string | Channel UUID |
+| `stage` | boolean | If true, moves to staging tree; if false, moves directly to main tree |
+
+**Response**
+
+```json
+{
+  "success": true,
+  "new_channel": "6199dde695db4ee4ab392222d5af1e5c",
+  "diff_task_id": "task-uuid-here"
+}
+```
+
+### POST /api/internal/publish_channel
+
+Publishes a channel, making it exportable to Kolibri.
+
+**Request**
+
+```http
+POST /api/internal/publish_channel
+Authorization: Token {token}
+Content-Type: application/json
+
+{
+  "channel_id": "6199dde695db4ee4ab392222d5af1e5c",
+  "version_notes": "Added new algebra lessons"
+}
+```
+
+**Response**
+
+```json
+{
+  "success": true,
+  "channel": "6199dde695db4ee4ab392222d5af1e5c"
+}
+```
+
+After publishing, the channel will be queued for export and will become available for import into Kolibri installations.
+
+## Additional Endpoints
+
+### POST /api/internal/check_user_is_editor
+
+Checks if the authenticated user has edit permissions for a channel.
+
+**Request**
+
+```http
+POST /api/internal/check_user_is_editor
+Authorization: Token {token}
+Content-Type: application/json
+
+{
+  "channel_id": "6199dde695db4ee4ab392222d5af1e5c"
+}
+```
+
+**Response**
+
+```json
+{
+  "success": true
+}
+```
+
+**Errors**
+
+- `403 Forbidden` - User does not have edit permissions
+- `404 Not Found` - Channel not found
+
+### POST /api/internal/get_channel_status_bulk
+
+Returns status information for multiple channels.
+
+**Request**
+
+```http
+POST /api/internal/get_channel_status_bulk
+Content-Type: application/json
+
+{
+  "channel_ids": [
+    "6199dde695db4ee4ab392222d5af1e5c",
+    "abc123def456"
+  ]
+}
+```
+
+**Response**
+
+```json
+{
+  "success": true,
+  "statuses": {
+    "6199dde695db4ee4ab392222d5af1e5c": "staged",
+    "abc123def456": "active"
+  }
+}
+```
+
+**Status Values**
+
+- `active` - Channel is published and active
+- `staged` - Channel has staged changes not yet published
+- `unpublished` - Channel has unpublished changes in main tree
+- `deleted` - Channel has been deleted
+
+## Error Handling
+
+All endpoints return standard HTTP status codes:
+
+- `200 OK` - Request successful
+- `400 Bad Request` - Invalid request data
+- `403 Forbidden` - Authentication failed or insufficient permissions
+- `404 Not Found` - Resource not found
+- `500 Internal Server Error` - Server error
+
+Error responses include a message describing the issue:
+
+```json
+{
+  "error": "Error message here"
+}
+```

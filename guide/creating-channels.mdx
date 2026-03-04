@@ -1,0 +1,286 @@
+---
+title: Creating channels
+description: Step-by-step guide to creating and configuring channels in Kolibri Studio
+---
+
+Channels are the fundamental organizing unit in Kolibri Studio. Each channel is a curated collection of educational content that can be published and imported into Kolibri for offline learning.
+
+## Understanding channels
+
+A channel in Studio consists of:
+
+- **Metadata**: Name, description, language, license, and thumbnail
+- **Content tree**: Hierarchical structure of topics and resources
+- **Publishing history**: Versions of the channel over time
+- **Collaborators**: Team members with access to edit or view
+
+## Creating a new channel
+
+<Steps>
+  <Step title="Navigate to your dashboard">
+    Log in to [Kolibri Studio](https://studio.learningequality.org) and go to your channel dashboard. This shows all channels you have access to.
+  </Step>
+  <Step title="Click New Channel">
+    Click the **New Channel** button to start the creation process.
+  </Step>
+  <Step title="Enter basic information">
+    Fill in the required fields:
+    
+    - **Channel name**: A clear, descriptive name (e.g., "Grade 8 Science", "Literacy Resources", "Teacher Training Materials")
+    - **Description**: Explain what content is in the channel, who it's for, and how it should be used
+    - **Language**: The primary language of the content. This helps users discover your channel.
+    
+    <Tip>
+      Choose a descriptive name that includes the subject, grade level, or target audience. This helps teachers and content managers find your channel.
+    </Tip>
+  </Step>
+  <Step title="Set a thumbnail">
+    Upload a representative image for your channel. This appears in:
+    - The channel list in Studio
+    - The Kolibri channel browser
+    - Channel search results
+    
+    **Recommended size**: 400x225 pixels (16:9 aspect ratio)
+    
+    **Supported formats**: JPG, PNG
+  </Step>
+  <Step title="Choose a license">
+    Select the default license for content in this channel. All content you add will inherit this license unless you specify otherwise.
+    
+    Common options:
+    - **CC BY**: Free to reuse with attribution
+    - **CC BY-SA**: Free to reuse with attribution and share-alike
+    - **CC BY-NC**: Free for non-commercial use with attribution
+    - **All Rights Reserved**: No reuse allowed without permission
+    
+    Learn more about [licensing](/concepts/licensing).
+  </Step>
+  <Step title="Create the channel">
+    Click **Create** to generate your new channel. You'll be redirected to the channel editing page where you can start adding content.
+  </Step>
+</Steps>
+
+## Channel settings
+
+After creating a channel, you can modify its settings at any time.
+
+### Accessing channel settings
+
+1. Open your channel in the editor
+2. Click the **Channel** menu in the top navigation
+3. Select **Settings**
+
+### Available settings
+
+<Accordion title="Basic information">
+  - **Name**: Change the channel name
+  - **Description**: Update the channel description
+  - **Language**: Change the primary language
+  - **Thumbnail**: Replace the channel image
+</Accordion>
+
+<Accordion title="Content defaults">
+  Set default values for all content added to this channel:
+  - **License**: Default license for new resources
+  - **Author**: Default author name
+  - **Provider**: Organization providing the content
+  - **Aggregator**: Organization that compiled the content
+  - **Copyright holder**: Entity that holds the copyright
+</Accordion>
+
+<Accordion title="Source information">
+  If your channel imports content from another source:
+  - **Source channel**: Link to the original Studio channel (if applicable)
+  - **Source domain**: Website where content originated
+  - **Source URL**: Direct link to the original content
+</Accordion>
+
+<Accordion title="Publishing options">
+  - **Make channel public**: Allow anyone to discover and import your channel in Kolibri
+  - **Channel token**: Unique identifier for importing into Kolibri (auto-generated)
+</Accordion>
+
+## Channel visibility
+
+### Public channels
+
+When you mark a channel as **public**, it:
+
+- Appears in the public channel library in Studio
+- Can be discovered in Kolibri's channel browser
+- Is indexed by the Studio search engine
+
+**Use cases for public channels**:
+- Open educational resources (OER) you want to share widely
+- Content aligned to national curricula
+- Community-contributed learning materials
+
+### Private (unlisted) channels
+
+Private channels:
+
+- Do not appear in public listings
+- Can only be imported into Kolibri using the channel token
+- Are visible only to collaborators in Studio
+
+**Use cases for private channels**:
+- School-specific content
+- Copyrighted materials with limited distribution rights
+- Work-in-progress channels not ready for public use
+- Content for a specific organization or project
+
+<Info>
+  Even private channels can be imported into Kolibri if users have the channel token. The token acts like a password to access unlisted channels.
+</Info>
+
+## Channel templates
+
+Studio doesn't provide formal templates, but you can create reusable channel structures by:
+
+1. Creating a "template" channel with your preferred topic structure
+2. Making a copy of it for each new channel
+3. Filling in the actual content under each topic
+
+### Example template structures
+
+**By grade level**:
+```
+Math Resources
+├── Grade 1
+├── Grade 2
+├── Grade 3
+...
+```
+
+**By subject and unit**:
+```
+Science Curriculum
+├── Biology
+│   ├── Unit 1: Cells
+│   ├── Unit 2: Genetics
+│   └── Unit 3: Evolution
+├── Chemistry
+└── Physics
+```
+
+**By resource type**:
+```
+Teacher Resources
+├── Lesson Plans
+├── Video Tutorials
+├── Practice Exercises
+└── Assessment Tools
+```
+
+## Copying channels
+
+You can create a copy of any channel you have access to.
+
+<Steps>
+  <Step title="Open the source channel">
+    Navigate to the channel you want to copy.
+  </Step>
+  <Step title="Make a copy">
+    Click **Channel** → **Make a copy**.
+  </Step>
+  <Step title="Name the copy">
+    Give the new channel a different name to distinguish it from the original.
+  </Step>
+  <Step title="Edit independently">
+    The copy is now a separate channel. Changes to one won't affect the other.
+  </Step>
+</Steps>
+
+<Note>
+  Copying creates a duplicate of the channel tree and metadata, but does not duplicate the actual file storage. Both channels reference the same uploaded files.
+</Note>
+
+## Deleting channels
+
+You can delete a channel if you no longer need it.
+
+<Warning>
+  **This action is permanent**. Once deleted, a channel cannot be recovered.
+</Warning>
+
+<Steps>
+  <Step title="Open channel settings">
+    Go to **Channel** → **Settings**.
+  </Step>
+  <Step title="Scroll to danger zone">
+    At the bottom of the settings page, find the "Delete Channel" section.
+  </Step>
+  <Step title="Confirm deletion">
+    Click **Delete Channel** and confirm in the dialog.
+  </Step>
+</Steps>
+
+**What happens when you delete a channel**:
+- The channel is removed from your dashboard
+- Collaborators lose access
+- If the channel was published, existing Kolibri installations keep their imported copies (but won't see updates)
+- Files uploaded to this channel may be removed if not used by other channels
+
+## Best practices
+
+### Naming conventions
+
+- Include the subject and grade level in the name
+- Use consistent naming across related channels
+- Avoid version numbers in the name (use versioning instead)
+- Keep names concise but descriptive
+
+**Good examples**:
+- "Grade 3 Math: Numbers and Operations"
+- "High School Biology Lab Activities"
+- "Adult Literacy: Reading Comprehension"
+
+**Poor examples**:
+- "My Channel"
+- "Math"
+- "Science Content v2.1"
+
+### Descriptions
+
+Write clear descriptions that answer:
+
+- **What**: What content is included?
+- **Who**: Who is the target audience?
+- **Why**: What learning goals does it support?
+- **How**: How should it be used?
+
+**Example description**:
+> This channel contains video lessons and practice exercises for Grade 6 mathematics, aligned to the Common Core State Standards. Topics include fractions, decimals, ratios, and basic geometry. Suitable for independent study or classroom use.
+
+### Licensing
+
+- Choose the most permissive license that fits your content rights
+- Be consistent with licensing across your channels
+- Always respect copyright and attribution requirements
+- When in doubt, use "All Rights Reserved" and clarify later
+
+Learn more about [licensing best practices](/concepts/licensing).
+
+### Organization
+
+- Plan your topic structure before adding content
+- Keep the tree depth to 2-4 levels for easier navigation
+- Group related content under topics
+- Use clear, descriptive topic names
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Add Content" icon="plus" href="/guide/organizing-content">
+    Learn how to add and organize content in your channel
+  </Card>
+  <Card title="Publish" icon="upload" href="/guide/publishing">
+    Make your channel available for import into Kolibri
+  </Card>
+  <Card title="Collaborate" icon="users" href="/guide/collaboration">
+    Invite team members to help build your channel
+  </Card>
+  <Card title="Channel Concepts" icon="book" href="/concepts/channels">
+    Understand how channels work under the hood
+  </Card>
+</CardGroup>

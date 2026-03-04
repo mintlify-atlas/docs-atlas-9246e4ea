@@ -1,0 +1,378 @@
+---
+title: Organizing content
+description: Learn how to add, arrange, and structure content in your Kolibri Studio channels
+---
+
+Effective content organization makes it easier for learners to find and navigate educational materials. This guide covers strategies for adding and structuring content in your channels.
+
+## Content hierarchy
+
+Studio organizes content in a **tree structure** using the Modified Preorder Tree Traversal (MPTT) algorithm:
+
+```
+Channel (root)
+├── Topic
+│   ├── Resource (video, document, etc.)
+│   ├── Resource
+│   └── Subtopic
+│       ├── Resource
+│       └── Resource
+├── Topic
+└── Topic
+```
+
+### Node types
+
+- **Topics**: Containers that group related content (like folders)
+- **Resources**: Actual learning materials (videos, documents, exercises, etc.)
+
+Learn more about the [content node structure](/concepts/content-nodes).
+
+## Adding content
+
+### Method 1: Import from the public library
+
+The fastest way to populate a channel is by importing existing content.
+
+<Steps>
+  <Step title="Open the clipboard">
+    Click the **Clipboard** icon (bottom right corner) to open the content browser.
+  </Step>
+  <Step title="Browse the library">
+    Switch to the **Library** tab to see all public channels. Use search and filters to find relevant content:
+    - **Subject**: Math, Science, Literacy, etc.
+    - **Language**: Filter by content language
+    - **Format**: Video, document, exercise, etc.
+  </Step>
+  <Step title="Add to clipboard">
+    Click the **+** icon next to any topic or resource to add it to your clipboard. You can add multiple items.
+  </Step>
+  <Step title="Copy to your channel">
+    Return to the **Clipboard** tab, select items, and click **Copy to Channel**. Choose where in your tree to paste them.
+  </Step>
+</Steps>
+
+<Info>
+  Imported content retains its original metadata, license, and files. You can edit metadata after importing if needed.
+</Info>
+
+### Method 2: Upload new content
+
+<Steps>
+  <Step title="Navigate to the parent topic">
+    In your channel tree, click on the topic where you want to add content.
+  </Step>
+  <Step title="Click Add">
+    Click the **Add** button and select the content type:
+    - **Upload files**: Videos, documents, audio, etc.
+    - **New exercise**: Create interactive questions
+    - **New topic**: Create a container for organizing content
+  </Step>
+  <Step title="Fill in metadata">
+    For each resource, provide:
+    - **Title**: Name of the resource
+    - **Description**: Summary of what learners will find
+    - **Language**: Language of the content
+    - **License**: Copyright license
+    - **Tags**: Keywords for searchability
+  </Step>
+  <Step title="Upload files">
+    Drag and drop or browse for files. Supported formats:
+    - Video: MP4 (H.264), WebM
+    - Document: PDF, ePub
+    - Audio: MP3
+    - Subtitles: VTT, SRT
+    - Thumbnails: JPG, PNG
+  </Step>
+  <Step title="Save">
+    Click **Save** to add the resource to your channel.
+  </Step>
+</Steps>
+
+<Warning>
+  **File size limits**: Individual files should be under 500 MB. For larger videos, consider compressing them or splitting into multiple parts.
+</Warning>
+
+### Method 3: Create exercises
+
+Exercises are interactive assessments with multiple question types.
+
+<Steps>
+  <Step title="Add a new exercise">
+    Click **Add** → **New exercise**.
+  </Step>
+  <Step title="Enter exercise details">
+    Provide a title, description, and metadata.
+  </Step>
+  <Step title="Add questions">
+    Click **Add question** and select a question type:
+    - **Single selection**: Multiple choice with one correct answer
+    - **Multiple selection**: Select all that apply
+    - **True/False**: Binary choice
+    - **Input question**: Numeric or text input
+    - **Perseus question**: Advanced math questions with LaTeX
+  </Step>
+  <Step title="Configure mastery criteria">
+    Set how many questions a learner must answer correctly to complete the exercise (e.g., "3 in a row" or "5 out of 5").
+  </Step>
+  <Step title="Save the exercise">
+    Click **Save** to add it to your channel.
+  </Step>
+</Steps>
+
+Learn more about [content types](/concepts/content-types).
+
+## Organizing topics
+
+### Creating topics
+
+Topics help structure your content into logical sections.
+
+<Steps>
+  <Step title="Add a new topic">
+    Click **Add** → **New topic** from the parent location.
+  </Step>
+  <Step title="Name the topic">
+    Give it a clear, descriptive name (e.g., "Introduction to Fractions", "Unit 1: Cells").
+  </Step>
+  <Step title="Add a description">
+    Explain what content is in this topic and how it relates to the overall channel.
+  </Step>
+  <Step title="Set a thumbnail (optional)">
+    Upload an image to represent this topic visually.
+  </Step>
+</Steps>
+
+### Nesting topics
+
+You can create subtopics within topics to build a hierarchy:
+
+```
+Mathematics
+├── Number Sense
+│   ├── Place Value
+│   ├── Rounding
+│   └── Estimation
+├── Fractions
+│   ├── Understanding Fractions
+│   ├── Adding Fractions
+│   └── Multiplying Fractions
+└── Geometry
+```
+
+<Tip>
+  **Recommended depth**: Keep your tree 2-4 levels deep. Deeper trees are harder to navigate on small screens.
+</Tip>
+
+## Moving and reordering content
+
+### Drag and drop
+
+The easiest way to reorganize content:
+
+1. Click and hold on a content node in the tree
+2. Drag it to a new position
+3. Drop it where you want it to appear
+
+### Move operation
+
+For more control, use the Move operation:
+
+<Steps>
+  <Step title="Select content">
+    Click the checkbox next to one or more content nodes.
+  </Step>
+  <Step title="Click Move">
+    Click the **Move** button in the toolbar.
+  </Step>
+  <Step title="Choose destination">
+    Navigate to the target topic in the tree.
+  </Step>
+  <Step title="Confirm">
+    Click **Move here** to complete the operation.
+  </Step>
+</Steps>
+
+### Copy vs. move
+
+- **Move**: Removes the content from the original location and places it in the new location
+- **Copy**: Creates a duplicate in the new location while keeping the original
+
+<Note>
+  Copying content creates a reference to the same underlying files. Both copies share the same storage.
+</Note>
+
+## Editing content
+
+### Edit metadata
+
+<Steps>
+  <Step title="Open the content editor">
+    Click on any content node in the tree to open its details panel.
+  </Step>
+  <Step title="Make changes">
+    Update any field:
+    - Title and description
+    - Language and license
+    - Tags and categories
+    - Thumbnail
+  </Step>
+  <Step title="Save changes">
+    Click **Save** to update the content.
+  </Step>
+</Steps>
+
+### Replace files
+
+If you need to update a video or document:
+
+<Steps>
+  <Step title="Open the content editor">
+    Click on the resource in the tree.
+  </Step>
+  <Step title="Go to the Files section">
+    Scroll to the **Files** section in the details panel.
+  </Step>
+  <Step title="Remove the old file">
+    Click the **X** next to the file to remove it.
+  </Step>
+  <Step title="Upload the new file">
+    Drag and drop or browse for the replacement file.
+  </Step>
+  <Step title="Save">
+    Click **Save** to apply the change.
+  </Step>
+</Steps>
+
+<Warning>
+  Replacing files in a published channel will only affect future versions. Existing Kolibri installations won't update until they reimport the channel.
+</Warning>
+
+## Deleting content
+
+<Steps>
+  <Step title="Select content">
+    Check the box next to one or more content nodes.
+  </Step>
+  <Step title="Click Delete">
+    Click the **Delete** button in the toolbar.
+  </Step>
+  <Step title="Confirm deletion">
+    Confirm in the dialog. Deleted content moves to the trash.
+  </Step>
+</Steps>
+
+### Recovering deleted content
+
+Deleted items are moved to the **Trash**:
+
+<Steps>
+  <Step title="Open trash">
+    Click **Channel** → **Trash** in the top menu.
+  </Step>
+  <Step title="Find the item">
+    Browse or search for the deleted content.
+  </Step>
+  <Step title="Restore">
+    Click **Restore** to move it back to its original location.
+  </Step>
+</Steps>
+
+<Info>
+  Items in the trash are permanently deleted after 30 days.
+</Info>
+
+## Metadata and tags
+
+### Required metadata
+
+Every content node must have:
+
+- **Title**: Clear, descriptive name
+- **License**: Copyright license (inherited from channel default if not specified)
+
+### Recommended metadata
+
+- **Description**: Explain what the content covers and who it's for
+- **Language**: Specify the language of the content
+- **Tags**: Keywords for search and filtering
+- **Thumbnail**: Visual representation
+
+### Using tags effectively
+
+Tags help users discover content. Consider tagging by:
+
+- **Subject**: math, science, literacy, history
+- **Grade level**: grade-1, grade-6, secondary
+- **Topic**: fractions, cells, grammar, world-war-2
+- **Resource type**: tutorial, practice, assessment, reference
+
+<Tip>
+  Use consistent tags across your channels for better discoverability.
+</Tip>
+
+## Best practices
+
+### Structure for navigation
+
+- Group related content under topics
+- Use clear, descriptive names
+- Keep similar items at the same tree level
+- Order content logically (e.g., from simple to complex)
+
+### Chunk content appropriately
+
+- Break long videos into shorter segments (5-10 minutes)
+- Create separate resources for each lesson or concept
+- Use topics to group a sequence of related resources
+
+### Provide context
+
+- Write descriptions for every topic and resource
+- Explain how content fits into the broader learning path
+- Include prerequisites if learners need prior knowledge
+
+### Balance depth and breadth
+
+- Don't create too many top-level topics (5-10 is ideal)
+- Don't nest too deeply (2-4 levels max)
+- Group small, related resources together
+
+### Example: Well-organized channel
+
+```
+High School Chemistry
+├── 1. Introduction (topic)
+│   ├── What is Chemistry? (video)
+│   ├── Lab Safety (video)
+│   └── Scientific Method (document)
+├── 2. Matter and Energy (topic)
+│   ├── States of Matter (video)
+│   ├── Physical vs Chemical Changes (video)
+│   ├── Practice: Identifying Changes (exercise)
+│   └── Energy in Reactions (video)
+├── 3. Atomic Structure (topic)
+│   ├── Parts of an Atom (video)
+│   ├── Periodic Table Introduction (video)
+│   ├── Electron Configuration (video)
+│   ├── Practice: Atomic Structure (exercise)
+│   └── Periodic Table Reference (document)
+└── ... (more topics)
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Content Types" icon="shapes" href="/concepts/content-types">
+    Learn about all supported content formats
+  </Card>
+  <Card title="Publishing" icon="upload" href="/guide/publishing">
+    Make your channel available in Kolibri
+  </Card>
+  <Card title="Licensing" icon="scale-balanced" href="/concepts/licensing">
+    Understand content licensing requirements
+  </Card>
+  <Card title="Content Nodes" icon="sitemap" href="/concepts/content-nodes">
+    Deep dive into the content tree structure
+  </Card>
+</CardGroup>

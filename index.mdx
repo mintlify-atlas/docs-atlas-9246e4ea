@@ -1,97 +1,228 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Kolibri Studio"
+description: "Content curation and channel management platform for creating educational materials"
+mode: "custom"
 ---
 
-## Setting up
+<div className="relative min-h-[500px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#4368f6] via-[#3B5AFE] to-[#1a73e8] dark:from-[#2d4ab3] dark:via-[#2640cc] dark:to-[#0f52b3]">
+  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE2djRoLTR2LTRoNHptMCAwaDR2NGgtNHYtNHptLTQgMHY0aC00di00aDR6bTAtNHY0aC00di00aDR6bTQgMHY0aC00di00aDR6bTQgMHY0aC00di00aDR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+  <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 text-center">
+    <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
+      Kolibri Studio
+    </h1>
+    <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed">
+      Create and curate educational content channels for offline learning with Kolibri
+    </p>
+    <div className="flex flex-wrap items-center justify-center gap-4">
+      <a
+        href="/quickstart"
+        className="inline-flex items-center px-8 py-3.5 rounded-lg bg-white text-[#4368f6] font-semibold hover:bg-gray-50 transition-colors shadow-lg"
+      >
+        Get Started
+        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </a>
+      <a
+        href="/api/overview"
+        className="inline-flex items-center px-8 py-3.5 rounded-lg border-2 border-white/30 bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors backdrop-blur-sm"
+      >
+        View API Reference
+      </a>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+      Get started in minutes
+    </h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      Create your first educational content channel with Kolibri Studio
+    </p>
+  </div>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+  <Steps>
+    <Step title="Create an account">
+      Sign up for a free Kolibri Studio account at [studio.learningequality.org](https://studio.learningequality.org). You'll be able to start creating and organizing educational content immediately.
+    </Step>
+    <Step title="Create your first channel">
+      Click **New Channel** from the dashboard. Give your channel a name, description, and select the appropriate language and license for your content.
+      
+      ```json
+      {
+        "name": "My Educational Channel",
+        "description": "Math resources for grade 6",
+        "language": "en",
+        "license": "CC BY"
+      }
+      ```
+    </Step>
+    <Step title="Add content">
+      Import existing content from the public library, upload your own files (videos, PDFs, exercises), or use ricecooker to programmatically import content at scale.
+    </Step>
+    <Step title="Publish to Kolibri">
+      When your channel is ready, click **Publish** to make it available for import into Kolibri instances. Your content will be packaged and distributed for offline learning.
+    </Step>
+  </Steps>
+</div>
 
-## Make it yours
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+      Explore by topic
+    </h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400">
+      Everything you need to curate and distribute educational content
+    </p>
+  </div>
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
+  <CardGroup cols={2}>
     <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+      title="Core Concepts"
+      icon="book-open"
+      href="/concepts/channels"
+    >
+      Understand channels, content nodes, and how content is organized in Studio
+    </Card>
+    <Card
+      title="User Guide"
+      icon="users"
+      href="/guide/creating-channels"
+    >
+      Learn how to create channels, organize content, and collaborate with your team
+    </Card>
+    <Card
+      title="Developer Guide"
+      icon="code"
+      href="/development/setup"
+    >
+      Set up your local development environment and contribute to Studio
+    </Card>
+    <Card
+      title="API Reference"
+      icon="terminal"
+      href="/api/overview"
+    >
+      Integrate with Studio using the REST API and ricecooker SDK
+    </Card>
+  </CardGroup>
+</div>
 
-## Create beautiful pages
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+      Key features
+    </h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400">
+      Powerful tools for educational content curation
+    </p>
+  </div>
 
-Everything you need to create world-class documentation.
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27]">
+      <div className="w-12 h-12 rounded-lg bg-[#4368f6]/10 dark:bg-[#4368f6]/20 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-[#4368f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Channel Management
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400">
+        Create and organize educational content into channels with hierarchical topic structures
+      </p>
+    </div>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27]">
+      <div className="w-12 h-12 rounded-lg bg-[#4368f6]/10 dark:bg-[#4368f6]/20 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-[#4368f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Collaboration
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400">
+        Invite team members with role-based permissions to collaboratively curate content
+      </p>
+    </div>
 
-## Need inspiration?
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27]">
+      <div className="w-12 h-12 rounded-lg bg-[#4368f6]/10 dark:bg-[#4368f6]/20 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-[#4368f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Offline-First Editing
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400">
+        Edit content locally with IndexedDB sync for reliable editing on unreliable connections
+      </p>
+    </div>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27]">
+      <div className="w-12 h-12 rounded-lg bg-[#4368f6]/10 dark:bg-[#4368f6]/20 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-[#4368f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Rich Content Types
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400">
+        Support for videos, documents, exercises, HTML5 apps, and interactive assessments
+      </p>
+    </div>
+
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27]">
+      <div className="w-12 h-12 rounded-lg bg-[#4368f6]/10 dark:bg-[#4368f6]/20 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-[#4368f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Programmatic Import
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400">
+        Use ricecooker Python SDK to automate content import from external sources at scale
+      </p>
+    </div>
+
+    <div className="p-6 rounded-xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27]">
+      <div className="w-12 h-12 rounded-lg bg-[#4368f6]/10 dark:bg-[#4368f6]/20 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6 text-[#4368f6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        Publish to Kolibri
+      </h3>
+      <p className="text-gray-600 dark:text-gray-400">
+        Export channels for import into Kolibri for offline distribution to learners
+      </p>
+    </div>
+  </div>
+</div>
+
+<div className="mt-20 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gradient-to-br from-gray-50 to-white dark:from-[#1a1d27] dark:to-[#0f1117] p-8 md:p-12 text-center">
+    <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">
+      Ready to get started?
+    </h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+      Create your first educational content channel with Kolibri Studio and bring learning to communities without reliable internet access.
+    </p>
+    <a
+      href="/quickstart"
+      className="inline-flex items-center px-8 py-3.5 rounded-lg bg-[#4368f6] text-white font-semibold hover:bg-[#3B5AFE] transition-colors shadow-lg"
+    >
+      Get Started
+      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+    </a>
+  </div>
+</div>

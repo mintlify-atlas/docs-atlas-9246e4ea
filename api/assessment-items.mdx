@@ -1,0 +1,375 @@
+---
+title: "Assessment Items"
+description: "Create and manage questions for exercises"
+---
+
+The Assessment Items API allows you to create and manage individual questions and answers for exercise content.
+
+## Endpoints
+
+### List Assessment Items
+
+<CodeGroup>
+```bash GET /api/assessmentitem
+curl -H "Authorization: Token YOUR_TOKEN" \
+  "https://studio.learningequality.org/api/assessmentitem?contentnode={node_id}"
+```
+</CodeGroup>
+
+Retrieve assessment items for exercises.
+
+<ParamField query="contentnode" type="string">
+  Filter by content node ID
+</ParamField>
+
+<ParamField query="contentnode__in" type="string">
+  Filter by multiple content node IDs (comma-separated)
+</ParamField>
+
+<ResponseExample>
+```json Response
+[
+  {
+    "assessment_id": "assessment-id-123",
+    "contentnode": "exercise-node-id",
+    "type": "single_selection",
+    "question": "What is 2 + 2?",
+    "answers": [
+      {
+        "answer": "3",
+        "correct": false,
+        "order": 1
+      },
+      {
+        "answer": "4",
+        "correct": true,
+        "order": 2
+      },
+      {
+        "answer": "5",
+        "correct": false,
+        "order": 3
+      }
+    ],
+    "hints": [
+      {
+        "hint": "Think about basic addition",
+        "order": 1
+      }
+    ],
+    "order": 1,
+    "randomize": false,
+    "deleted": false
+  }
+]
+```
+</ResponseExample>
+
+### Create Assessment Item
+
+<CodeGroup>
+```bash POST /api/assessmentitem
+curl -X POST \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contentnode": "exercise-node-id",
+    "assessment_id": "new-assessment-id",
+    "type": "single_selection",
+    "question": "What is the capital of France?",
+    "answers": "[{\"answer\": \"Paris\", \"correct\": true, \"order\": 1}, {\"answer\": \"London\", \"correct\": false, \"order\": 2}]",
+    "hints": "[{\"hint\": \"It is known as the City of Light\", \"order\": 1}]",
+    "order": 1
+  }' \
+  https://studio.learningequality.org/api/assessmentitem
+```
+</CodeGroup>
+
+Create a new assessment item (question) for an exercise.
+
+<ParamField body="contentnode" type="string" required>
+  Exercise content node ID
+</ParamField>
+
+<ParamField body="assessment_id" type="string" required>
+  Unique assessment identifier (UUID format)
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Question type
+</ParamField>
+
+<ParamField body="question" type="string">
+  Question text (supports markdown)
+</ParamField>
+
+<ParamField body="answers" type="string" required>
+  JSON string containing answer objects
+</ParamField>
+
+<ParamField body="hints" type="string">
+  JSON string containing hint objects (default: "[]")
+</ParamField>
+
+<ParamField body="order" type="integer">
+  Display order within the exercise (default: 1)
+</ParamField>
+
+<ParamField body="randomize" type="boolean">
+  Whether to randomize answer order (default: false)
+</ParamField>
+
+<ParamField body="source_url" type="string">
+  Source URL for the question
+</ParamField>
+
+<ParamField body="raw_data" type="string">
+  Raw question data
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "assessment_id": "new-assessment-id",
+  "contentnode": "exercise-node-id",
+  "type": "single_selection",
+  "question": "What is the capital of France?",
+  "answers": "[{\"answer\": \"Paris\", \"correct\": true, \"order\": 1}]",
+  "hints": "[{\"hint\": \"It is known as the City of Light\", \"order\": 1}]",
+  "order": 1,
+  "randomize": false,
+  "deleted": false
+}
+```
+</ResponseExample>
+
+### Update Assessment Item
+
+<CodeGroup>
+```bash PATCH /api/assessmentitem
+curl -X PATCH \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contentnode": "exercise-node-id",
+    "assessment_id": "existing-assessment-id",
+    "question": "Updated question text?"
+  }' \
+  https://studio.learningequality.org/api/assessmentitem
+```
+</CodeGroup>
+
+Update an existing assessment item. Assessment items are identified by the combination of `contentnode` and `assessment_id`.
+
+<Note>
+Assessment items use a composite lookup key of `contentnode` and `assessment_id` rather than a single ID field.
+</Note>
+
+### Delete Assessment Item
+
+<CodeGroup>
+```bash PATCH /api/assessmentitem
+curl -X PATCH \
+  -H "Authorization: Token YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contentnode": "exercise-node-id",
+    "assessment_id": "assessment-to-delete",
+    "deleted": true
+  }' \
+  https://studio.learningequality.org/api/assessmentitem
+```
+</CodeGroup>
+
+Soft delete an assessment item by setting `deleted` to `true`.
+
+## Question Types
+
+Supported question types:
+
+<ResponseField name="single_selection" type="string">
+  Multiple choice with one correct answer
+</ResponseField>
+
+<ResponseField name="multiple_selection" type="string">
+  Multiple choice with multiple correct answers
+</ResponseField>
+
+<ResponseField name="true_false" type="string">
+  True/false question
+</ResponseField>
+
+<ResponseField name="input_question" type="string">
+  Free text input question
+</ResponseField>
+
+<ResponseField name="perseus_question" type="string">
+  Khan Academy Perseus format question
+</ResponseField>
+
+## Answer Format
+
+Answers must be provided as a JSON string containing an array of answer objects:
+
+```json
+[
+  {
+    "answer": "Answer text",
+    "correct": true,
+    "order": 1
+  },
+  {
+    "answer": "Another answer",
+    "correct": false,
+    "order": 2
+  }
+]
+```
+
+<ParamField name="answer" type="string" required>
+  The answer text (supports markdown)
+</ParamField>
+
+<ParamField name="correct" type="boolean" required>
+  Whether this answer is correct
+</ParamField>
+
+<ParamField name="order" type="integer" required>
+  Display order for this answer
+</ParamField>
+
+## Hint Format
+
+Hints must be provided as a JSON string containing an array of hint objects:
+
+```json
+[
+  {
+    "hint": "Hint text to help learner",
+    "order": 1
+  },
+  {
+    "hint": "Another hint",
+    "order": 2
+  }
+]
+```
+
+<ParamField name="hint" type="string" required>
+  The hint text (supports markdown)
+</ParamField>
+
+<ParamField name="order" type="integer" required>
+  Display order for this hint
+</ParamField>
+
+## Images in Questions
+
+You can embed images in questions, answers, and hints using markdown syntax:
+
+```markdown
+![Alt text]($/path/to/image.jpg)
+```
+
+The image files are automatically managed:
+1. Upload images using the Files API with `preset: "exercise_image"`
+2. Reference them in markdown using the checksum: `![](${placeholder}/checksum.ext)`
+3. The API automatically associates image files with the assessment item
+
+<Note>
+Images referenced in question text, answers, or hints are automatically tracked and associated with the assessment item.
+</Note>
+
+## Assessment Item Fields
+
+<ResponseField name="assessment_id" type="string">
+  Unique assessment identifier (UUID)
+</ResponseField>
+
+<ResponseField name="contentnode" type="string">
+  Associated exercise content node ID
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Question type (single_selection, multiple_selection, true_false, input_question, perseus_question)
+</ResponseField>
+
+<ResponseField name="question" type="string">
+  Question text (supports markdown)
+</ResponseField>
+
+<ResponseField name="answers" type="string">
+  JSON string of answer objects
+</ResponseField>
+
+<ResponseField name="hints" type="string">
+  JSON string of hint objects
+</ResponseField>
+
+<ResponseField name="order" type="integer">
+  Display order within the exercise
+</ResponseField>
+
+<ResponseField name="randomize" type="boolean">
+  Whether to randomize answer order for the learner
+</ResponseField>
+
+<ResponseField name="source_url" type="string">
+  Source URL where the question originated
+</ResponseField>
+
+<ResponseField name="raw_data" type="string">
+  Raw question data in original format
+</ResponseField>
+
+<ResponseField name="deleted" type="boolean">
+  Whether the assessment item has been deleted
+</ResponseField>
+
+## Example: Creating a Complete Exercise
+
+<Steps>
+  <Step title="Create Exercise Node">
+    Create a content node with `kind: "exercise"` and set `extra_fields.randomize`
+  </Step>
+  <Step title="Add Assessment Items">
+    Create multiple assessment items for the exercise
+  </Step>
+  <Step title="Upload Images">
+    If questions contain images, upload them with `preset: "exercise_image"`
+  </Step>
+  <Step title="Reference Images">
+    Use markdown image syntax in questions/answers/hints
+  </Step>
+</Steps>
+
+<CodeGroup>
+```json Complete Exercise Example
+{
+  "contentnode": {
+    "title": "Basic Arithmetic",
+    "kind": "exercise",
+    "extra_fields": {
+      "randomize": true
+    }
+  },
+  "assessment_items": [
+    {
+      "assessment_id": "uuid-1",
+      "type": "single_selection",
+      "question": "What is 5 + 3?",
+      "answers": "[{\"answer\": \"8\", \"correct\": true, \"order\": 1}, {\"answer\": \"7\", \"correct\": false, \"order\": 2}]",
+      "hints": "[{\"hint\": \"Add the numbers together\", \"order\": 1}]",
+      "order": 1
+    },
+    {
+      "assessment_id": "uuid-2",
+      "type": "multiple_selection",
+      "question": "Which are even numbers?",
+      "answers": "[{\"answer\": \"2\", \"correct\": true, \"order\": 1}, {\"answer\": \"3\", \"correct\": false, \"order\": 2}, {\"answer\": \"4\", \"correct\": true, \"order\": 3}]",
+      "order": 2
+    }
+  ]
+}
+```
+</CodeGroup>
