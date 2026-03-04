@@ -1,0 +1,136 @@
+{
+  "projectType": "saas",
+  "projectName": "Kolibri Studio",
+  "projectDescription": "Content curation and channel management platform for creating educational materials for Kolibri",
+  "theme": "maple",
+  "primaryColor": "#4368f6",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/channels",
+              "concepts/content-nodes",
+              "concepts/content-types",
+              "concepts/licensing"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/creating-channels",
+              "guide/organizing-content",
+              "guide/publishing",
+              "guide/collaboration"
+            ]
+          },
+          {
+            "group": "Developer Guide",
+            "pages": [
+              "development/setup",
+              "development/architecture",
+              "development/frontend",
+              "development/backend",
+              "development/testing"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/ricecooker",
+              "integrations/kolibri"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Content API",
+            "pages": [
+              "api/channels",
+              "api/content-nodes",
+              "api/files",
+              "api/assessment-items"
+            ]
+          },
+          {
+            "group": "User & Permissions",
+            "pages": [
+              "api/users",
+              "api/invitations",
+              "api/channel-users"
+            ]
+          },
+          {
+            "group": "Public API",
+            "pages": [
+              "api/public-channels"
+            ]
+          },
+          {
+            "group": "Internal API",
+            "pages": [
+              "api/internal-endpoints"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Channel creation and management",
+    "Content node organization with MPTT tree structure",
+    "Multi-user collaboration with role-based permissions",
+    "File upload and storage management",
+    "Content publishing to Kolibri",
+    "Rich text editor for content descriptions",
+    "Assessment item creation (exercises, questions)",
+    "Offline-first editing with IndexedDB sync",
+    "Programmatic content import via ricecooker API",
+    "Public channel catalog",
+    "Community library submissions",
+    "Channel versioning and staging"
+  ],
+  "publicApiSurface": [
+    "POST /api/channel",
+    "GET /api/channel/{id}",
+    "POST /api/contentnode",
+    "GET /api/contentnode/{id}",
+    "POST /api/file",
+    "POST /api/assessmentitem",
+    "POST /api/invitation",
+    "GET /api/channeluser",
+    "POST /api/user",
+    "GET /api/bookmark",
+    "POST /api/clipboard",
+    "POST /api/sync",
+    "GET /api/public/v1/channels",
+    "GET /api/public/v1/channels/lookup/{identifier}",
+    "POST /api/internal/publish_channel",
+    "POST /api/internal/file_upload",
+    "POST /api/internal/create_channel",
+    "POST /api/internal/add_nodes",
+    "POST /api/internal/finish_channel"
+  ]
+}
